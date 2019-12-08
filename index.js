@@ -1,4 +1,7 @@
-const _ = require('lodash');
-const  {getPositions}  = require('lodash-bzextras');
+const feildActions = require('./procedures/feildactions')
+const manipulatingData = require('./procedures/manuplatingdata')
 
-console.log(getPositions(a,"a[].a"))
+module.exports = {
+  ...feildActions,
+  ...manipulatingData
+}
