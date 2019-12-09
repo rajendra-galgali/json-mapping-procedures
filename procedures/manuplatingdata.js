@@ -18,7 +18,6 @@ const groupToSibling = function groupToSibling(data, config) {
     let positions = getPositions(data, config.from);
     if (!positions.length) throw new Error("no array in position");
     config.conditionRule = config.conditionRule || "eq";
-    config.conditionRule = config.conditionRule || "eq";
     config.operation = config.operation || "+";
     positions.forEach(p => {
       let sib =
@@ -68,7 +67,127 @@ const groupToSibling = function groupToSibling(data, config) {
     return e;
   }
 };
+/**
+ * @param {object} data origin and target data
+ * @param {object} config procedure configuration
+ * @param {string} config.from location of Array of objects
+ * @param {string} config.groupBy relative location of feild to evaluate
+ * @param {[string]|string} config.feilds relative to groupby parent field
+ * @param {string} config.to location of Array of objects
+ */
+const groupBy = function groupBy(data, config) {
+  try {
+    if(config.to.match("[]") != config.from.match("[]")) throw new Error("to field should have same number of array as from field");
+    let positions = getPositions(data, config.from);
+    if (!positions.length) throw new Error("no array in position");
+    let feilds = Array.isArray(config.feilds) ? config.feilds : [config.feilds];
+    let finalresult = [];
+    positions.forEach(p => {
+      let arrayobject = _.get(data, p);
+      let resultObject = {};
+      arrayobject.forEach(ob => {
+        let gb = config.groupBy;
+        let gbval = _.get(ob, gb).toString();
+        let currentresult = resultObject[gbval];
+        if (!currentresult) currentresult = resultObject[gbval] = {};
+        let fieldsParent = gb.slice(0, gb.lastIndexOf(".") + 1);
+        _.flattenDeep(
+          feilds.map(f => getPositions(ob, fieldsParent + f))
+        ).forEach(f => {
+          let fval = _.get(ob, f);
+          let fname = f.slice(f.lastIndexOf("."));
+          if (currentresult[fname]) currentresult[fname].push(fval);
+          else currentresult[fname] = [fval];
+        });
+      });
+      finalresult.push({ arrayaddress: p, resultObject });
+    });
+    finalresult.forEach(fo=>{
+      let rov = fo.resultObject;
+      let ro = fo.arrayaddress;
+      let to = config.to;
+      let arnum = ro.match(/\[[0-9]+\]/g);
+      arnum.forEach(ind=>{
+        to = to.replace("[]",ind);
+      });
+      _.set(data,to,rov)
+      
+    });
+    return false;
+  } catch (e) {
+    return e;
+  }
+};
+/**
+ * @param {object} data origin and target data
+ * @param {object} config procedure configuration
+ * @param {string} config.from location of Array of objects
+ * @param {string} config.groupBy relative location of feild to evaluate
+ * @param {string} config.field relative to groupby parent field
+ * @param {string?} config.to location of returning object
+ */
+const groupBySum = function groupBySum(data, config) {
+  try {
+    config.to = config.to || config.from.slice(0,config.from.lastIndexOf(".")+1)+"__groupby"+ config.groupBy;
+    if(config.to.match("[]") != config.from.match("[]")) throw new Error("to field should have same number of array as from field");
+    let positions = getPositions(data, config.from);
+    if (!positions.length) throw new Error("no array in position");
+    let finalresult = [];
+    positions.forEach(p => {
+      let arrayobject = _.get(data, p);
+      let resultObject = {};
+      arrayobject.forEach(ob => {
+        let gb = config.groupBy;
+        let gbval = _.get(ob, gb).toString();
+        resultObject[gbval] = resultObject[gbval] ||0;
+        let fieldsParent = gb.slice(0, gb.lastIndexOf(".") + 1);
+        getPositions(ob, fieldsParent + config.field)
+        .forEach(f => {
+          return resultObject[gbval] +=  parseFloat(_.get(ob, f))}
+        );
+      });
+      let to = config.to;
+      let arnum = p.match(/\[[0-9]+\]/g);
+      arnum.forEach(ind=>{
+        to = to.replace("[]",ind);
+      });
+      _.set(data,to,resultObject)
+    });
+    return false;
+  } catch (e) {
+    return e;
+  }
+};
+
+/**
+ * @param {object} data data to be manuplated
+ * @param {object} config procedure configuration
+ * @param {string} config.from location of Array of objects
+ * @param {string} config.to location of flatten array
+ */
+const flatten = function flatten(data, config) {
+  try{
+    let from, to;
+  try {
+    from = JSON.parse(config.from);
+  } catch (e) {
+    from = [config.from];
+  }
+  try {
+    to = JSON.parse(config.to);
+  } catch (e) {
+    to = [config.to];
+  }
+    let result = from.reduce((cu,c)=>([...cu,...getPositions(data,c)]),[]).map(p=>_.get(data,p));
+    to.reduce((cu,c)=>([...cu,...getPositions(data,c)]),[]).forEach(p=> _.set(data,p,_.flattenDeep(result)));
+  }catch(e){
+    return e;
+  }
+};
 
 module.exports = {
-  groupToSibling
+  groupBy,
+  groupToSibling,
+  groupBySum,
+  flatten
 };
