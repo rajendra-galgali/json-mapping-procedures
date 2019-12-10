@@ -26,6 +26,7 @@ const fieldAdd = function fieldAdd(data, config) {
       else if (p.indexOf(".") == -1) data[p] = targetdata;
     });
   } catch (e) {
+    console.error(e);
     return e;
   }
   return;
@@ -51,6 +52,7 @@ const fieldCopy = function fieldCopy(data, config) {
         : from.map(p => _.cloneDeep(_.get(data, p)));
     to.forEach(tar => _.set(data, tar, resultdata));
   } catch (e) {
+    console.error(e);
     return e;
   }
   return false;
@@ -74,6 +76,7 @@ const fieldRemove = async function fieldRemove(data, config) {
     //   _.omit(data, f);
     // });
   } catch (e) {
+    console.error(e);
     return e;
   }
   return;
@@ -87,6 +90,7 @@ const fieldRemove = async function fieldRemove(data, config) {
  */
 const fieldRename = function fieldRename(data, config) {
   try {
+    if(path.match(/\./).length) throw new Error("can't rename Root Data Field!!!")
     let fields = getPositions(data, config.path);
     if (!fields.length) throw new Error("no such path exists");
     fields.forEach(f => {
@@ -100,6 +104,7 @@ const fieldRename = function fieldRename(data, config) {
       });
     });
   } catch (e) {
+    console.error(e);
     return e;
   }
   return;
@@ -123,10 +128,12 @@ const fieldSetContent = function fieldSetContent(data, config) {
       _.set(data, f, _.cloneDeep(contentdata));
     });
   } catch (e) {
+    console.error(e);
     return e;
   }
   return;
 };
+
 
 module.exports = {
   fieldAdd,

@@ -39,10 +39,28 @@ module.exports = {
     from:"",
     groupBy:"",
     field:"",
-    to:""
+    to:"",
+    toResultField:"",
+    toGroupByField:"",
   },
   flatten:{
     from:"",
     to:""
   },
+  groupByFeild:{
+    from:"",
+    groupBy:"",
+    field:"",
+    to:"",
+    groupByKey:""
+  },
+  CustomFunction:{
+    script:""
+  },
+  lookup:{
+    from:"",
+    to:"",
+    lookupFields:"",
+    returningFields:""
+  }
 }

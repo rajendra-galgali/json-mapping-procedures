@@ -64,6 +64,7 @@ const groupToSibling = function groupToSibling(data, config) {
     });
     return false;
   } catch (e) {
+    console.error(e);
     return e;
   }
 };
@@ -115,9 +116,11 @@ const groupBy = function groupBy(data, config) {
     });
     return false;
   } catch (e) {
+    console.error(e);
     return e;
   }
 };
+
 /**
  * @param {object} data origin and target data
  * @param {object} config procedure configuration
@@ -125,36 +128,110 @@ const groupBy = function groupBy(data, config) {
  * @param {string} config.groupBy relative location of feild to evaluate
  * @param {string} config.field relative to groupby parent field
  * @param {string?} config.to location of returning object
+ * @param {string?} config.toGroupByField location of returning object
+ * @param {string?} config.toResultField location of returning object
  */
 const groupBySum = function groupBySum(data, config) {
   try {
     config.to = config.to || config.from.slice(0,config.from.lastIndexOf(".")+1)+"__groupby"+ config.groupBy;
+    if(config.to.match("[]") > config.from.match("[]")) throw new Error("to field can't have more number of array as from field");
+    let positions = getPositions(data, config.from);
+    if (!positions.length) throw new Error("no array in position");
+    positions.forEach((p,ri )=> {
+      let arrayobject = _.get(data, p);
+      let resultObject = {};
+      arrayobject.forEach(ob => {
+        
+        getPositions(ob,config.groupBy).forEach(gb=>{
+          let gbval = (_.get(ob, gb)||"undefined").toString();
+          resultObject[gbval] = resultObject[gbval] ||0;
+          let fieldsParent = gb.slice(0, gb.lastIndexOf(".") + 1);
+          getPositions(ob, fieldsParent + config.field)
+          .forEach(f => {
+            return resultObject[gbval] +=  parseFloat(_.get(ob, f))}
+          );
+        })
+      });
+      if(config.toGroupByField || config.toResultField){
+        let toGroupByField = config.toGroupByField || config.field.slice(config.field.lastIndexOf('.'));
+        let toResultField = config.toResultField || config.groupBy.slice(config.groupBy.lastIndexOf('.'));
+
+        resultObject = Object.keys(resultObject).reduce((cu,c)=>{
+          return [...cu,{[toGroupByField]:c,[toResultField]:resultObject[c] }]; 
+        },[]);
+      }
+      let to = config.to;
+      let arnum = p.match(/\[[0-9]+\]/g);
+      let index = 0;
+      if(arnum){
+        arnum.forEach(ind=>{
+          let fto = to.replace("[]",ind);
+          if(to == fto) {
+            to = to+"["+index+"]";
+            index++;
+          }else{
+            to = fto;
+          }
+        });
+
+      }
+      let curvalue = _.get(data,to);
+      if(curvalue){
+        if(Array.isArray(curvalue)){
+          resultObject = [...curvalue,...resultObject];
+        }else if(typeof curvalue == 'object'){
+          resultObject = {...curvalue,...resultObject};
+        }
+      }
+        _.set(data,to,resultObject)
+      
+    });
+    return false;
+  } catch (e) {
+    console.error(e);
+    return e;
+  }
+};
+
+/**
+ * @param {object} data origin and target data
+ * @param {object} config procedure configuration
+ * @param {string} config.from location of Array of objects
+ * @param {string} config.groupBy relative location of feild to evaluate
+ * @param {string} config.field relative to array
+ * @param {string} config.to location of output
+ * @param {string?} config.groupByKey location of returning object
+ */
+const groupByFeild = function groupByFeild(data, config) {
+  try {
     if(config.to.match("[]") != config.from.match("[]")) throw new Error("to field should have same number of array as from field");
     let positions = getPositions(data, config.from);
     if (!positions.length) throw new Error("no array in position");
-    let finalresult = [];
     positions.forEach(p => {
       let arrayobject = _.get(data, p);
       let resultObject = {};
       arrayobject.forEach(ob => {
         let gb = config.groupBy;
-        let gbval = _.get(ob, gb).toString();
-        resultObject[gbval] = resultObject[gbval] ||0;
-        let fieldsParent = gb.slice(0, gb.lastIndexOf(".") + 1);
-        getPositions(ob, fieldsParent + config.field)
+        let gbval = config.groupByKey ? gb.slice(0, gb.lastIndexOf(".")) : _.get(ob, gb).toString();
+        resultObject[gbval] = resultObject[gbval] ||[];
+        getPositions(ob, config.field)
         .forEach(f => {
-          return resultObject[gbval] +=  parseFloat(_.get(ob, f))}
+          return resultObject[gbval].push(_.get(ob, f))}
         );
       });
       let to = config.to;
       let arnum = p.match(/\[[0-9]+\]/g);
-      arnum.forEach(ind=>{
-        to = to.replace("[]",ind);
-      });
+      if(arnum)
+        arnum.forEach(ind=>{
+          to = to.replace("[]",ind);
+        });
+
+      
       _.set(data,to,resultObject)
     });
     return false;
   } catch (e) {
+    console.error(e);
     return e;
   }
 };
@@ -181,13 +258,61 @@ const flatten = function flatten(data, config) {
     let result = from.reduce((cu,c)=>([...cu,...getPositions(data,c)]),[]).map(p=>_.get(data,p));
     to.reduce((cu,c)=>([...cu,...getPositions(data,c)]),[]).forEach(p=> _.set(data,p,_.flattenDeep(result)));
   }catch(e){
+    console.error(e);
     return e;
   }
 };
 
+
+/**
+ * @param {object} data data to be manuplated
+ * @param {object} config procedure configuration
+ * @param {string} config.from location of input
+ * @param {string} config.to location of output
+ * @param {string} config.lookupFields location of lookingup fields
+ * @param {string} config.returningFields location of returning Fields
+ */
+const lookup = function lookup(data, config) {
+  try{
+    if(config.to.match("[]") != config.from.match("[]")) throw new Error("to field should have same number of array as from field");
+    // if(config.lookupFields.match("[]") != config.returningFields.match("[]")) throw new Error("lookupFields field should have same number of array as returningFields field");
+    let positions = getPositions(data, config.from);
+    let lookupValues = getPositions(data,config.lookupFields).reduce((cu,c)=>({...cu,[_.get(data,c)]:c}),{});
+    
+    if (!positions.length) throw new Error("no data in position");
+
+    positions.forEach(p => {
+      let lookupValue = _.get(data, p);
+      let resultpath = lookupValues[lookupValue] || null;
+      let to = config.to;
+      let returningFields = config.returningFields;
+
+
+      let arrnum = p.match(/\[[0-9]+\]/g);
+      if(arrnum)
+        arrnum.forEach(ind=>{
+          to = to.replace("[]",ind);
+        });
+      let arnum = resultpath.match(/\[[0-9]+\]/g);
+      if(arnum)
+        arnum.forEach(ind=>{
+          returningFields = returningFields.replace("[]",ind);
+        });
+       _.set(data,to,_.get(data,returningFields)|| null)
+    });
+  }catch(e){
+    console.error(e);
+    return e;
+  }
+};
+
+
+
 module.exports = {
-  groupBy,
-  groupToSibling,
+  // groupBy,
+  // groupToSibling,
+  lookup,
   groupBySum,
+  groupByFeild,
   flatten
 };
