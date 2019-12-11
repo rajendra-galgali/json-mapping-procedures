@@ -37,20 +37,75 @@ const fieldAdd = function fieldAdd(data, config) {
  * @param {object} config procedure configuration
  * @param {string} config.from location of origin data
  * @param {string} config.to location of target data
+ * @param {string} config.fromConditionFeild location of target data
+ * @param {string} config.fromConditionValuePath location of target data
  */
 const fieldCopy = function fieldCopy(data, config) {
   try {
     if (!config.from || !config.to)
       throw new Error("config.from and config.to can't be empty");
     let from = getPositions(data, config.from);
-    let to = getPositions(data, config.to);
-    if (!from.length || !to.length)
-      throw new Error("Error in config.from or config.to path");
-    let resultdata =
-      from.length == 1
-        ? _.cloneDeep(_.get(data, config.from))
-        : from.map(p => _.cloneDeep(_.get(data, p)));
-    to.forEach(tar => _.set(data, tar, resultdata));
+    from.forEach(fp => {
+      let fromvalue = _.cloneDeep(_.get(data, fp));
+      if (config.fromConditionFeild) {
+        config.fromConditionValuePath =
+          config.fromConditionValuePath || fromvalue;
+        let fconpath = (fp.match(/\[[0-9]+\]/g) || []).reduce(
+          (rp, ind) => rp.replace("[]", ind),
+          config.fromConditionFeild
+        );
+        let fconvalpath = (fp.match(/\[[0-9]+\]/g) || []).reduce(
+          (rp, ind) => rp.replace("[]", ind),
+          config.fromConditionValuePath
+        );
+
+        let fcontocheck = getPositions(data, fconpath).reduce(
+          (cu, c) => [...cu, _.get(data, c)],
+          []
+        );
+        let fconval = _.get(data, fconvalpath);
+        console.log(fcontocheck, fconval);
+        if (
+          (Array.isArray(fcontocheck) && fcontocheck.includes(fconval)) ||
+          fconval == fcontocheck
+        ) {
+          let to = (fp.match(/\[[0-9]+\]/g) || []).reduce(
+            (rp, ind) => rp.replace("[]", ind),
+            config.to
+          );
+          if (to.includes("[]")) {
+            to = to.replace(/\[\]/g, "[0]");
+            let curvar = _.get(data, to);
+            while (curvar) {
+              to = to.replace(
+                /\[([0-9]+)\]+$/,
+                (fm, n) => "[" + (parseInt(n) + 1) + "]"
+              );
+              curvar = _.get(data, to);
+            }
+          }
+          _.set(data, to, fromvalue);
+        }
+      } else {
+        let to = (fp.match(/\[[0-9]+\]/g) || []).reduce(
+          (rp, ind) => rp.replace("[]", ind),
+          config.to
+        );
+        if (to.includes("[]")) {
+          to = to.replace(/\[\]/g, "[0]");
+          let curvar = _.get(data, to);
+          while (curvar) {
+            to = to.replace(
+              /\[([0-9]+)\]+$/,
+              (fm, n) => "[" + (parseInt(n) + 1) + "]"
+            );
+            curvar = _.get(data, to);
+          }
+        }
+        _.set(data, to, fromvalue);
+      }
+    });
+    return false;
   } catch (e) {
     console.error(e);
     return e;
@@ -90,7 +145,8 @@ const fieldRemove = async function fieldRemove(data, config) {
  */
 const fieldRename = function fieldRename(data, config) {
   try {
-    if(path.match(/\./).length) throw new Error("can't rename Root Data Field!!!")
+    if (path.match(/\./).length)
+      throw new Error("can't rename Root Data Field!!!");
     let fields = getPositions(data, config.path);
     if (!fields.length) throw new Error("no such path exists");
     fields.forEach(f => {
@@ -133,7 +189,6 @@ const fieldSetContent = function fieldSetContent(data, config) {
   }
   return;
 };
-
 
 module.exports = {
   fieldAdd,
