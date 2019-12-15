@@ -6,6 +6,7 @@ const exec = function exec(data,procedures,quiet=false){
     try{
       logger("--------- Procedural actions started ----------------");
         let startin = new Date();
+      if(!Array.isArray) procedures = [procedures];
       for (let i = 0; i < procedures.length; i++) {
         let pstart = new Date();
         let p = procedures[i];
