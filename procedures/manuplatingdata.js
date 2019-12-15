@@ -338,6 +338,67 @@ const lookup = function lookup(data, config) {
 /**
  * @param {object} data data to be manuplated
  * @param {object} config procedure configuration
+ * @param {string} config.from  location of arrays to be sorted
+ * @param {string} config.to (optional) location of output array
+ * @param {string} config.sortBy location of sortingby field
+ * @param {string|[string]} config.sortArray locations of arrays of sorted values
+ * @param {string} config.sortArrayRelativity if the sortArray location is relative to from field
+ */
+const sortBy = function sortBy(data, config) {
+  try {
+    let origin = getPositions(data, config.from);
+    if (!origin.length) return false;
+    let sortarray;
+    if (config.sortArray && !config.sortArrayRelativity) {
+      sortarray = arrayParser(config.sortArray)
+        .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
+        .reduce((cu, c) => {
+          let val = _.get(data, c);
+          return Array.isArray(val) ? [...cu, ...val] : [...cu, val];
+        }, []);
+    }
+
+    origin.forEach(p => {
+      let targetarray = _.cloneDeep(_.get(data, p));
+      let pindexes = p.match(/\[[0-9]+\]/g) || [];
+      if (config.sortArray && config.sortArrayRelativity) {
+        sortarray = arrayParser(config.sortArray)
+          .map(sa => pindexes.reduce((cu, c) => cu.replace("[]", c), sa))
+          .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
+          .reduce((cu, c) => {
+            let val = _.get(data, c);
+            return Array.isArray(val) ? [...cu, ...val] : [...cu, val];
+          }, []);
+      }
+      targetarray.sort((a, b) => {
+        let aval = _.get(a, sortBy);
+        let bval = _.get(b, sortBy);
+        return sortarray
+          ? sortarray.indexOf(aval) > sortarray.indexOf(bval)
+            ? 1
+            : -1
+          : aval > bval
+          ? 1
+          : -1;
+      });
+      _.set(
+        data,
+        pindexes.reduce(
+          (cu, c) => cu.replace("[]", c),
+          config.to || config.from
+        ),
+        targetarray
+      );
+    });
+  } catch (e) {
+    console.error(e);
+    return e;
+  }
+};
+
+/**
+ * @param {object} data data to be manuplated
+ * @param {object} config procedure configuration
  * @param {string|[string]} config.positive location of input
  * @param {string|[string]} config.negetive location of output
  * @param {string|[string]} config.to location of lookingup fields
@@ -355,6 +416,7 @@ const sum = function sum(data, config) {
 
 module.exports = {
   groupBy,
+  sortBy,
   lookup,
   flatten
 };

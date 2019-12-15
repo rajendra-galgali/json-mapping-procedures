@@ -89,19 +89,6 @@ module.exports = {
         "empty/not empty : defines if condition values are relative to conditionField or not"
     }
   },
-  // groupToSibling:{
-  //   from: "",
-  //   fromFeild: "",
-  //   operation: "+",
-  //   conditionPath: "",
-  //   conditionValue: "",
-  //   conditionRule: "eq",
-  //   targetPath: "",
-  //   targetObject: "",
-  //   descriptions:{
-  //     overall:"",
-  //   }
-  // },
   groupBy: {
     from: "",
     groupBy: "",
@@ -132,23 +119,22 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to groupby feild"
     }
   },
-  // groupBySum: {
-  //   from: "",
-  //   groupBy: "",
-  //   field: "",
-  //   to: "",
-  //   toResultField: "",
-  //   toGroupByField: "",
-  //   descriptions: {
-  //     overall: "Sums up the feilds value of an array",
-  //     from: "string : The path of arrays to be groupedBy (Parent array)",
-  //     groupBy: "string : The relative path of feild to group data by",
-  //     field: "string : The relative path of feild to sum ",
-  //     to: "string : The path of output result",
-  //     toResultField: "string? : The result json sumed value field",
-  //     toGroupByField: "string? : The result json 'value of groupedBy' field"
-  //   }
-  // },
+  sortBy: {
+    from: "",
+    to: "",
+    sortBy: "",
+    sortArray: "",
+    sortArrayRelativity: "",
+    descriptions: {
+      overall: "Sort array of items base on sortArray and copy to to location",
+      from: "string : location of arrays to be sorted",
+      to: "string? : (optional) location of output array",
+      sortBy: "string : locations of sortingby field",
+      sortArray: "string|[string] : location of arrays of sorted values",
+      sortArrayRelativity:
+        " empty/notempty : if the sortArray location is relative to from field"
+    }
+  },
   flatten: {
     from: "",
     to: "",
@@ -158,16 +144,6 @@ module.exports = {
       to: "string : Path of target Array"
     }
   },
-  // groupByFeild: {
-  //   from: "",
-  //   groupBy: "",
-  //   field: "",
-  //   to: "",
-  //   groupByKey: "",
-  //   descriptions: {
-  //     overall: ""
-  //   }
-  // },
   CustomFunction: {
     script: "",
     descriptions: {
