@@ -3,53 +3,90 @@ module.exports = {
     parent: "",
     name: "undefined",
     data: "{}",
+    conditionField: "",
+    conditionValue: "",
+    conditionRelative: "",
     descriptions: {
       overall: "Adds a feild based of path and data given",
-      parent: "string : Parent Feild to add key",
+      parent: "string : Path of parent Feild to add key",
       name:
         "string  : The key of adding item if the parent is an array it will be ommited",
       data:
-        "* : Data to be inserted as item value if it's json-string it will be parsed "
+        "* : Data to be inserted as item value if it's json-string it will be parsed ",
+      conditionField: "string : address of condition fields",
+      conditionValue: "string | [string] : addresses of condition value ",
+      conditionRelative:
+        " empty/not empty : defines if condition values are relative to conditionField or not"
     }
   },
   fieldCopy: {
     from: "",
     to: "",
-    fromConditionFeild: "",
-    fromConditionValuePath: "",
+    conditionFeild: "",
+    conditionValuePath: "",
+    conditionRelative: "",
     descriptions: {
       overall: "Copy items value from one path to multiple paths",
       from: "string : The path of origin",
-      to: "string > The path of destination",
-      fromConditionFeild:
-        "string > The path of feild to check the fromConditionValue with",
-      fromConditionValuePath:
-        "string > The path of value to check the fromConditionFeild value with"
+      to: "string : The path of destination",
+      conditionFeild:
+        "string : The path of feild to check the fromConditionValue with",
+      conditionValue:
+        "string | [string] : The paths of values to check the fromConditionFeild value with",
+      conditionRelative:
+        "empty/not empty : defines if condition values are relative to conditionField or not"
     }
   },
   fieldRemove: {
     path: "",
+    conditionFeild: "",
+    conditionValuePath: "",
+    conditionRelative: "",
     descriptions: {
       overall: "Removes multiple feilds based on given paths",
-      path: "string | [string] > Paths of items to be removed"
+      path: "string | [string] > Paths of items to be removed",
+      conditionFeild:
+        "string : The path of feild to check the fromConditionValue with",
+      conditionValue:
+        "string | [string] : The paths of values to check the fromConditionFeild value with",
+      conditionRelative:
+        "empty/not empty : defines if condition values are relative to conditionField or not"
     }
   },
   fieldRename: {
     path: "",
     name: "",
+    conditionFeild: "",
+    conditionValuePath: "",
+    conditionRelative: "",
     descriptions: {
       overall: "Change the key at given paths",
       path: "string | [string] : Paths of items to be renamed",
-      name: "string : New key name"
+      name: "string : New key name",
+      conditionFeild:
+        "string : The path of feild to check the fromConditionValue with",
+      conditionValue:
+        "string | [string] : The paths of values to check the fromConditionFeild value with",
+      conditionRelative:
+        "empty/not empty : defines if condition values are relative to conditionField or not"
     }
   },
   fieldSetContent: {
     path: "",
     data: "{}",
+    conditionFeild: "",
+    conditionValuePath: "",
+    conditionRelative: "",
     descriptions: {
       overall: "Setting values in pathes",
       path: "string | [string] : The pathes to be changed",
-      data: "* : Data to be set in path"
+      data: "* : Data to be set in path",
+      conditionFeild:
+        "string : The path of feild to check the fromConditionValue with",
+      conditionValue:
+        "string | [string] : The paths of values to check the fromConditionFeild value with",
+      conditionRelative:
+        "empty/not empty : defines if condition values are relative to conditionField or not"
     }
   },
   // groupToSibling:{
@@ -65,32 +102,53 @@ module.exports = {
   //     overall:"",
   //   }
   // },
-  // groupBy:{
-  //   from:"",
-  //   groupBy:"",
-  //   feilds:"",
-  //   to:"",
-  //   descriptions:{
-  //     overall:"",
-  //   }
-  // },
-  groupBySum: {
+  groupBy: {
     from: "",
     groupBy: "",
     field: "",
+    operation: "",
     to: "",
-    toResultField: "",
     toGroupByField: "",
+    toResultField: "",
+    conditionField: "",
+    conditionValue: "",
+    conditionRelative: "",
     descriptions: {
-      overall: "Sums up the feilds value of an array",
-      from: "string : The path of arrays to be groupedBy (Parent array)",
-      groupBy: "string : The relative path of feild to group data by",
-      field: "string : The relative path of feild to sum ",
-      to: "string : The path of output result",
-      toResultField: "string? : The result json sumed value field",
-      toGroupByField: "string? : The result json 'value of groupedBy' field"
+      overall:
+        "Group array of items base on condition and returns operations defined",
+      from:
+        "string : path of arrays to pivot grouping data from (can't has more nested array then groupby)",
+      groupBy: "string : (Relative to from) Path of grouping by field",
+      field: "string : (Relative to from) Path of fields to operate on",
+      operation: "string : can contain 'sum' and or 'count' and or 'array'",
+      to: "string : Path of output object/array",
+      toGroupByField: "string: (Optional) name of returning groupby field",
+      toResultField: "string: (Optional) name of returning result field",
+      conditionField:
+        "string : (Optional) (Relative to from) Path of condition field",
+      conditionValue:
+        "string | [string] : (Optional) (Absolute Path)Path of condition field to match conditionField with",
+      conditionRelative:
+        "empty/not empty : (optional) if condition values relative to groupby feild"
     }
   },
+  // groupBySum: {
+  //   from: "",
+  //   groupBy: "",
+  //   field: "",
+  //   to: "",
+  //   toResultField: "",
+  //   toGroupByField: "",
+  //   descriptions: {
+  //     overall: "Sums up the feilds value of an array",
+  //     from: "string : The path of arrays to be groupedBy (Parent array)",
+  //     groupBy: "string : The relative path of feild to group data by",
+  //     field: "string : The relative path of feild to sum ",
+  //     to: "string : The path of output result",
+  //     toResultField: "string? : The result json sumed value field",
+  //     toGroupByField: "string? : The result json 'value of groupedBy' field"
+  //   }
+  // },
   flatten: {
     from: "",
     to: "",
@@ -100,16 +158,16 @@ module.exports = {
       to: "string : Path of target Array"
     }
   },
-  groupByFeild: {
-    from: "",
-    groupBy: "",
-    field: "",
-    to: "",
-    groupByKey: "",
-    descriptions: {
-      overall: ""
-    }
-  },
+  // groupByFeild: {
+  //   from: "",
+  //   groupBy: "",
+  //   field: "",
+  //   to: "",
+  //   groupByKey: "",
+  //   descriptions: {
+  //     overall: ""
+  //   }
+  // },
   CustomFunction: {
     script: "",
     descriptions: {
@@ -123,13 +181,22 @@ module.exports = {
     to: "",
     lookupFields: "",
     returningFields: "",
+    conditionField: "",
+    conditionValue: "",
+    conditionRelative: "",
     descriptions: {
       overall:
         "Lookups value form feilds and search for math then returns result",
       from: "string | [string] : Absolute paths of values to be looked up",
       to: "string | [string] : Absolute paths of returning value",
       lookupFields: "string | [string] : feilds that contain looking up values",
-      returningFields: "string : returning path after lookup is done"
+      returningFields: "string : returning path after lookup is done",
+      conditionField:
+        "string : (Optional) (Relative to from) Path of condition field",
+      conditionValue:
+        "string | [string] : (Optional) (Absolute Path)Path of condition field to match conditionField with",
+      conditionRelative:
+        "empty/not empty : (optional) if condition values relative to groupby feild"
     }
   }
 };
