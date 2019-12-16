@@ -1,7 +1,7 @@
 const _ = require("lodash");
 const { getPositions } = require("lodash-bzextras");
 const { parser, arrayParser } = require("../helpers");
-const fetch = window ? window.fetch : require("fetch");
+const fetch = typeof window !== 'undefined' ? window.fetch : require("node-fetch");
 
 /**
  * @param {object} data origins and targets data
@@ -55,3 +55,4 @@ const gateDataHTTP = async function gateDataRest(data, config) {
 module.exports = {
   gateDataHTTP
 };
+
