@@ -15,7 +15,7 @@ const fetch = typeof window !== 'undefined' ? window.fetch : require("node-fetch
  * @param {string?} config.redirect path to redirect [manual, *follow, error]
  * @param {string?} config.referrer path to referrer [no-referrer, *client]
  */
-const gateDataHTTP = async function gateDataRest(data, config) {
+const getDataHTTP = async function getDataHTTP(data, config) {
   try {
     let url = _.get(data, config.url);
     let method = _.get(data, config.method);
@@ -54,6 +54,6 @@ const gateDataHTTP = async function gateDataRest(data, config) {
 };
 
 module.exports = {
-  gateDataHTTP
+  getDataHTTP
 };
 

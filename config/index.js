@@ -215,8 +215,6 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
     }
   },
-  
-
   getDataHTTP:{
     to: "",
     url: "",
