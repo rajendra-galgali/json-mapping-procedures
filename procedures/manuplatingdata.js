@@ -297,7 +297,6 @@ const lookup = function lookup(data, config) {
           arnum.forEach(ind => {
             returningFields = returningFields.replace("[]", ind);
           });
-        // returningFields = getPositions(returningFields);
         let resultvalue;
         if (returningFields.includes("[]")) {
           resultvalue = [];
@@ -409,11 +408,11 @@ const sortBy = function sortBy(data, config) {
 const sum = function sum(data, config) {
   try {
     let positives = arrayParser(config.positives).reduce(
-      (cu, c) => [...cu, ...getPositions(c)],
+      (cu, c) => [...cu, ...getPositions(data,c)],
       []
     );
     let negetives = arrayParser(config.negetives).reduce(
-      (cu, c) => [...cu, ...getPositions(c)],
+      (cu, c) => [...cu, ...getPositions(data,c)],
       []
     );
     let conditionFields = arrayParser(config.conditionFields);
@@ -422,7 +421,7 @@ const sum = function sum(data, config) {
     let conditionValuepaths = arrayParser(config.conditionValues);
     if (config.conditionFields && !config.conditionRelative) {
       conditionValues = conditionValuepaths
-        .reduce((cu, c) => [...cu, ...getPositions(c)], [])
+        .reduce((cu, c) => [...cu, ...getPositions(data,c)], [])
         .reduce((cu, c) => {
           let val = _.get(data, c);
           if (Array.isArray(val)) return [...cu, ..._.flattenDeep(val)];
@@ -535,7 +534,7 @@ const sum = function sum(data, config) {
 const toArray = function toArray(data,config){
   try {
     let from = arrayParser(config.from).reduce(
-      (cu, c) => [...cu, ...getPositions(c)],
+      (cu, c) => [...cu, ...getPositions(data,c)],
       []
     );
     let to = arrayParser(config.to);
@@ -544,7 +543,7 @@ const toArray = function toArray(data,config){
     let conditionValuepaths = arrayParser(config.conditionValues);
     if (config.conditionFields && !config.conditionRelative) {
       conditionValues = conditionValuepaths
-        .reduce((cu, c) => [...cu, ...getPositions(c)], [])
+        .reduce((cu, c) => [...cu, ...getPositions(data,c)], [])
         .reduce((cu, c) => {
           let val = _.get(data, c);
           if (Array.isArray(val)) return [...cu, ..._.flattenDeep(val)];
