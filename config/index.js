@@ -174,5 +174,26 @@ module.exports = {
       conditionRelative:
         "empty/not empty : (optional) if condition values relative to groupby feild"
     }
+  },
+  getDataHTTP:{
+    to: "",
+    url: "",
+    method: "",
+    body: "",
+    queryParams: "",
+    headers: "",
+    redirect: "",
+    referrer: "",
+    descriptions: {
+      overall: "get the data from api and outputs to direction",
+        to: "string : Path to output",
+        url: "string : Path to url",
+        method: "string : (Optional) Path to fetch method default to get(get,post,patch,put,head)",
+        body: "string :(Optional) Path to body json",
+        queryParams: "string : (Optional) Path to query params object",
+        headers: "string : (Optional) Path to header object",
+        redirect: "string : (Optional) Path to redirect option [manual, *follow, error]",
+        referrer: "string : (Optional) Path to referrer option [no-referrer, *client]",
+    }
   }
 };
