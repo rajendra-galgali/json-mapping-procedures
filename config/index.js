@@ -1,4 +1,5 @@
 module.exports = {
+  // "--Fields Actiona---":"",
   fieldAdd: {
     parent: "",
     name: "undefined",
@@ -89,6 +90,7 @@ module.exports = {
         "empty/not empty : defines if condition values are relative to conditionField or not"
     }
   },
+  // "--Data Manuplation---":"",
   groupBy: {
     from: "",
     groupBy: "",
@@ -144,19 +146,12 @@ module.exports = {
       to: "string : Path of target Array"
     }
   },
-  CustomFunction: {
-    script: "",
-    descriptions: {
-      overall:
-        "Runns Custom script in javaScript it has access to all datas and lodash functionalities",
-      script: "string : js script to be runned"
-    }
-  },
   lookup: {
     from: "",
     to: "",
     lookupFields: "",
     returningFields: "",
+    relativeLookup: "",
     conditionField: "",
     conditionValue: "",
     conditionRelative: "",
@@ -167,6 +162,8 @@ module.exports = {
       to: "string | [string] : Absolute paths of returning value",
       lookupFields: "string | [string] : feilds that contain looking up values",
       returningFields: "string : returning path after lookup is done",
+      relativeLookup:
+        " empty/not empty if the lookupFields are relative to from ",
       conditionField:
         "string : (Optional) (Relative to from) Path of condition field",
       conditionValue:
@@ -183,9 +180,10 @@ module.exports = {
     conditionValues: "",
     conditionRelative: "",
     descriptions: {
-      overall:"Sums numbers or array of numbers and adds them to output",
+      overall: "Sums numbers or array of numbers and adds them to output",
       positives: "string | [string] : Absolute paths of values to be Added",
-      negetives: "string | [string] : Absolute paths of values to be subtracked",
+      negetives:
+        "string | [string] : Absolute paths of values to be subtracked",
       to: "string | [string] : Absolute paths of returning value",
       conditionField:
         "string | [string] : (Optional) (Relative to positive and negetive) Path of condition field",
@@ -203,7 +201,7 @@ module.exports = {
     conditionValues: "",
     conditionRelative: "",
     descriptions: {
-      overall:"Sums numbers or array of numbers and adds them to output",
+      overall: "Sums numbers or array of numbers and adds them to output",
       from: "string | [string] : Absolute paths of values to be pushed",
       to: "string | [string] : Absolute paths of output field",
       flatten: "string : empty/notempty if the from array get flatten or not",
@@ -215,7 +213,17 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
     }
   },
-  getDataHTTP:{
+  // "--Meta Functionality---":"",
+  CustomFunction: {
+    script: "",
+    descriptions: {
+      overall:
+        "Runns Custom script in javaScript it has access to all datas and lodash functionalities",
+      script: "string : js script to be runned"
+    }
+  },
+  // "--Getting Data---":"",
+  getDataHTTP: {
     to: "",
     url: "",
     method: "",
@@ -226,14 +234,17 @@ module.exports = {
     referrer: "",
     descriptions: {
       overall: "get the data from api and outputs to direction",
-        to: "string : Path to output",
-        url: "string : Path to url",
-        method: "string : (Optional) Path to fetch method default to get(get,post,patch,put,head)",
-        body: "string :(Optional) Path to body json",
-        queryParams: "string : (Optional) Path to query params object",
-        headers: "string : (Optional) Path to header object",
-        redirect: "string : (Optional) Path to redirect option [manual, *follow, error]",
-        referrer: "string : (Optional) Path to referrer option [no-referrer, *client]",
+      to: "string : Path to output",
+      url: "string : Path to url",
+      method:
+        "string : (Optional) Path to fetch method default to get(get,post,patch,put,head)",
+      body: "string :(Optional) Path to body json",
+      queryParams: "string : (Optional) Path to query params object",
+      headers: "string : (Optional) Path to header object",
+      redirect:
+        "string : (Optional) Path to redirect option [manual, *follow, error]",
+      referrer:
+        "string : (Optional) Path to referrer option [no-referrer, *client]"
     }
   }
 };

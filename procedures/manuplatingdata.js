@@ -14,7 +14,7 @@ const { parser, arrayParser } = require("../helpers");
  * @param {string?} config.toResultField location of returning object
  * @param {string} config.conditionField relative location of condition fields
  * @param {string} config.conditionValue relative location of condition value fields
- * @param {string} config.conditionRelative relative location of condition value fields
+ * @param {*?} config.conditionRelative relativity of location of condition value fields
  */
 const groupBy = function groupBy(data, config) {
   try {
@@ -215,6 +215,10 @@ const flatten = function flatten(data, config) {
  * @param {string|[string]} config.to location of output
  * @param {string|[string]} config.lookupFields location of lookingup fields
  * @param {string} config.returningFields location of returning Fields
+ * @param {string} config.relativeLookup empty/not empty if the lookupFields are relative to from
+ * @param {string} config.conditionField relative location of condition fields
+ * @param {string|[string]} config.conditionValue relative location of condition value fields
+ * @param {*?} config.conditionRelative relativity of location of condition value fields
  */
 const lookup = function lookup(data, config) {
   try {
@@ -222,19 +226,19 @@ const lookup = function lookup(data, config) {
     let destination = arrayParser(config.to);
     //set to array if string of array
 
-    if (origin.length != destination.length)
-      throw new Error("from and to need to have same length");
-    let lookupFields = arrayParser(config.lookupFields);
-
     //get all of the lookup values in one object
-    let lookupValues = lookupFields
-      .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
-      .reduce((cu, c) => {
-        let val = _.get(data, c);
-        if (Array.isArray(val)) {
-          return val.reduce((cus, cc) => ({ ...cus, [cc]: c }), cu);
-        } else return { ...cu, [_.get(data, c)]: c };
-      }, {});
+    let lookupFields = arrayParser(config.lookupFields);
+    let lookupValues;
+    if (!config.relativeLookup) {
+      lookupValues = lookupFields
+        .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
+        .reduce((cu, c) => {
+          let val = _.get(data, c);
+          if (Array.isArray(val)) {
+            return val.reduce((cus, cc) => ({ ...cus, [cc]: c }), cu);
+          } else return { ...cu, [_.get(data, c)]: c };
+        }, {});
+    }
 
     let conditionValus;
     let condvalupaths = arrayParser(config.conditionValue);
@@ -253,8 +257,8 @@ const lookup = function lookup(data, config) {
       let positions = getPositions(data, org);
       if (!positions.length) throw new Error("no data in position");
       positions.forEach(p => {
+        let indexarray = p.match(/\[[0-9]+\]/g) || [];
         if (config.conditionField) {
-          let indexarray = p.match(/\[[0-9]+\]/g) || [];
           if (config.conditionRelative) {
             conditionValus = condvalupaths
               .reduce(
@@ -282,28 +286,36 @@ const lookup = function lookup(data, config) {
           )
             return;
         }
-
+        if (config.relativeLookup) {
+          lookupValues = lookupFields
+            .map(lp => indexarray.reduce((cu, c) => cu.replace("[]", c), lp))
+            .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
+            .reduce((cu, c) => {
+              let val = _.get(data, c);
+              if (Array.isArray(val)) {
+                return val.reduce((cus, cc) => ({ ...cus, [cc]: c }), cu);
+              } else return { ...cu, [_.get(data, c)]: c };
+            }, {});
+        }
         let lookupValue = _.get(data, p);
         let resultpath = lookupValues[lookupValue] || null;
-        let to = des;
-        let returningFields = config.returningFields;
-        let arrnum = p.match(/\[[0-9]+\]/g);
-        if (arrnum)
-          arrnum.forEach(ind => {
-            to = to.replace("[]", ind);
-          });
-        let arnum = resultpath ? resultpath.match(/\[[0-9]+\]/g) : null;
-        if (arnum)
-          arnum.forEach(ind => {
-            returningFields = returningFields.replace("[]", ind);
-          });
-        let resultvalue;
-        if (returningFields.includes("[]")) {
-          resultvalue = [];
-          resultvalue = getPositions(data, returningFields).reduce((cu, p) => {
-            return [...cu, _.get(data, p)];
-          }, []);
-        } else resultvalue = _.get(data, returningFields) || null;
+        let resultvalue = "";
+        if (resultpath) {
+          let returningFields = (resultpath.match(/\[[0-9]+\]/g) || []).reduce(
+            (cu, c) => cu.replace("[]", c),
+            config.returningFields
+          );
+          if (returningFields.includes("[]"))
+            resultvalue = getPositions(data, returningFields).reduce(
+              (cu, p) => {
+                return [...cu, _.get(data, p)];
+              },
+              []
+            );
+          else resultvalue = _.get(data, returningFields) || null;
+        }
+
+        let to = indexarray.reduce((cu, c) => cu.replace("[]", c), des);
         if (to.includes("[]")) {
           to = to.replace(/\[\]/g, "[0]");
           let curvar = _.get(data, to);
@@ -408,11 +420,11 @@ const sortBy = function sortBy(data, config) {
 const sum = function sum(data, config) {
   try {
     let positives = arrayParser(config.positives).reduce(
-      (cu, c) => [...cu, ...getPositions(data,c)],
+      (cu, c) => [...cu, ...getPositions(data, c)],
       []
     );
     let negetives = arrayParser(config.negetives).reduce(
-      (cu, c) => [...cu, ...getPositions(data,c)],
+      (cu, c) => [...cu, ...getPositions(data, c)],
       []
     );
     let conditionFields = arrayParser(config.conditionFields);
@@ -421,7 +433,7 @@ const sum = function sum(data, config) {
     let conditionValuepaths = arrayParser(config.conditionValues);
     if (config.conditionFields && !config.conditionRelative) {
       conditionValues = conditionValuepaths
-        .reduce((cu, c) => [...cu, ...getPositions(data,c)], [])
+        .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let val = _.get(data, c);
           if (Array.isArray(val)) return [...cu, ..._.flattenDeep(val)];
@@ -531,10 +543,10 @@ const sum = function sum(data, config) {
  * @param {string|[string]} config.conditionValues location of condition values
  * @param {string} config.conditionRelative empty/notempty if the conditionValues is relative to from fields
  */
-const toArray = function toArray(data,config){
+const toArray = function toArray(data, config) {
   try {
     let from = arrayParser(config.from).reduce(
-      (cu, c) => [...cu, ...getPositions(data,c)],
+      (cu, c) => [...cu, ...getPositions(data, c)],
       []
     );
     let to = arrayParser(config.to);
@@ -543,7 +555,7 @@ const toArray = function toArray(data,config){
     let conditionValuepaths = arrayParser(config.conditionValues);
     if (config.conditionFields && !config.conditionRelative) {
       conditionValues = conditionValuepaths
-        .reduce((cu, c) => [...cu, ...getPositions(data,c)], [])
+        .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let val = _.get(data, c);
           if (Array.isArray(val)) return [...cu, ..._.flattenDeep(val)];
@@ -553,8 +565,7 @@ const toArray = function toArray(data,config){
 
     from.forEach(p => {
       let val = _.get(data, p);
-      if (config.flatten && Array.isArray(val))
-        val = _.flattenDeep(val);
+      if (config.flatten && Array.isArray(val)) val = _.flattenDeep(val);
       if (!val) return;
       let pIndexes = p.match(/\[[0-9]+\]/g) || [];
       if (config.conditionFields) {
@@ -585,11 +596,11 @@ const toArray = function toArray(data,config){
       }
       to.forEach(t => {
         let top = pIndexes.reduce((cu, c) => cu.replace("[]", c), t);
-        let tov = _.get(data, top) ;
-        if(!tov || !Array.isArray(tov)){
-           tov = tov ? [tov,val]:[val];
-           return _.set(data, top, tov);
-          }
+        let tov = _.get(data, top);
+        if (!tov || !Array.isArray(tov)) {
+          tov = tov ? [tov, val] : [val];
+          return _.set(data, top, tov);
+        }
         tov.push(val);
       });
     });
@@ -598,7 +609,7 @@ const toArray = function toArray(data,config){
     console.error(e);
     return e;
   }
-}
+};
 module.exports = {
   groupBy,
   sortBy,
