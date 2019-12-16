@@ -586,7 +586,7 @@ const toArray = function toArray(data,config){
       to.forEach(t => {
         let top = pIndexes.reduce((cu, c) => cu.replace("[]", c), t);
         let tov = _.get(data, top) ;
-        if(!tov || !Array.isArray(tove)){
+        if(!tov || !Array.isArray(tov)){
            tov = tov ? [tov,val]:[val];
            return _.set(data, top, tov);
           }
