@@ -175,6 +175,48 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to groupby feild"
     }
   },
+  sum: {
+    positives: "",
+    negetives: "",
+    to: "",
+    conditionFields: "",
+    conditionValues: "",
+    conditionRelative: "",
+    descriptions: {
+      overall:"Sums numbers or array of numbers and adds them to output",
+      positives: "string | [string] : Absolute paths of values to be Added",
+      negetives: "string | [string] : Absolute paths of values to be subtracked",
+      to: "string | [string] : Absolute paths of returning value",
+      conditionField:
+        "string | [string] : (Optional) (Relative to positive and negetive) Path of condition field",
+      conditionValue:
+        "string | [string] : (Optional) Path of condition values to match conditionField with",
+      conditionRelative:
+        "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
+    }
+  },
+  toArray: {
+    from: "",
+    to: "",
+    flatten: "",
+    conditionFields: "",
+    conditionValues: "",
+    conditionRelative: "",
+    descriptions: {
+      overall:"Sums numbers or array of numbers and adds them to output",
+      from: "string | [string] : Absolute paths of values to be pushed",
+      to: "string | [string] : Absolute paths of output field",
+      flatten: "string : empty/notempty if the from array get flatten or not",
+      conditionField:
+        "string | [string] : (Optional) (Relative to from) Path of condition field",
+      conditionValue:
+        "string | [string] : (Optional) Path of condition values to match conditionField with",
+      conditionRelative:
+        "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
+    }
+  },
+  
+
   getDataHTTP:{
     to: "",
     url: "",

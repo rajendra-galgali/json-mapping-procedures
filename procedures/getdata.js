@@ -52,6 +52,7 @@ const gateDataHTTP = async function gateDataRest(data, config) {
     return e;
   }
 };
+
 module.exports = {
   gateDataHTTP
 };
