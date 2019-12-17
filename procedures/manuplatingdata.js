@@ -196,19 +196,27 @@ const groupBy = function groupBy(data, config) {
 /**
  * @param {object} data data to be manuplated
  * @param {object} config procedure configuration
- * @param {string} config.from location of Array of objects
- * @param {string} config.to location of flatten array
+ * @param {string|[string]} config.from location of Array of objects
+ * @param {string|[string]} config.to location of flatten array if empty it will be replaced
  */
 const flatten = function flatten(data, config) {
   try {
-    let from = arrayParser(config.from);
-    let to = arrayParser(config.to);
-    let result = from
-      .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
-      .map(p => _.get(data, p));
-    to.reduce((cu, c) => [...cu, ...getPositions(data, c)], []).forEach(p =>
-      _.set(data, p, _.flattenDeep(result))
+    let from = arrayParser(config.from).reduce(
+      (cu, c) => [...cu, ...getPositions(data, c)],
+      []
     );
+    let to = config.to
+      ? arrayParser(config.to).reduce(
+          (cu, c) => [...cu, ...getPositions(data, c)],
+          []
+        )
+      : null;
+    if (to && config.to != config.from)
+      to.forEach(p =>
+        _.set(data, p, _.flattenDeep(from.map(p => _.get(data, p))))
+      );
+    else from.forEach(f => _.set(data, f, _.flattenDeep(_.get(data, f))));
+    return;
   } catch (e) {
     console.error(e);
     return e;
