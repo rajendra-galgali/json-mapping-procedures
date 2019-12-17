@@ -13,14 +13,21 @@ const { parser, arrayParser } = require("../helpers");
  */
 const fieldAdd = function fieldAdd(data, config) {
   try {
-    if (!config.parent) throw new Error("parent can't be empty");
-    let fieldlist = arrayParser(config.parent).reduce(
-      (cu, c) => [...cu, ...getPositions(data, c)],
-      []
-    );
-
-    if (!fieldlist.length) throw new Error("Parent path is incorrect");
+    let fieldlist;
     let targetdata = config.data === undefined ? {} : parser(config.data);
+    if (config.parent) {
+      fieldlist = arrayParser(config.parent).reduce(
+        (cu, c) => [...cu, ...getPositions(data, c)],
+        []
+      );
+      if (!fieldlist.length) throw new Error("Parent path is incorrect");
+    } else {
+      _.set(data, config.name || "undefined", targetdata);
+      return;
+    }
+
+    if (!fieldlist.length)
+      _.set(parent + "." + config.name || "undefined", targetdata);
     let conditionValus;
     let condvalupaths = arrayParser(config.conditionValue);
     if (config.conditionField && !config.conditionRelative) {
@@ -31,6 +38,7 @@ const fieldAdd = function fieldAdd(data, config) {
           return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
         }, []);
     }
+
     fieldlist.forEach(p => {
       let parent = _.get(data, p);
       if (typeof parent != "object")
@@ -69,7 +77,7 @@ const fieldAdd = function fieldAdd(data, config) {
           return;
       }
       if (Array.isArray(parent)) parent.push(targetdata);
-      else if (parent) parent[config.name || "undefined"] = targetdata;
+      else _.set(data, parent + "." + config.name || "undefined", targetdata);
       // else if (p.indexOf(".") == -1) data[p] = targetdata;
     });
   } catch (e) {
@@ -90,8 +98,6 @@ const fieldAdd = function fieldAdd(data, config) {
  */
 const fieldCopy = function fieldCopy(data, config) {
   try {
-    if (!config.from || !config.to)
-      throw new Error("config.from and config.to can't be empty");
     let from = arrayParser(config.from).reduce(
       (cu, c) => [...cu, ...getPositions(data, c)],
       []
@@ -126,7 +132,7 @@ const fieldCopy = function fieldCopy(data, config) {
             }, []);
         }
         if (
-          !conditionValus.includes(
+          !conditionValues.includes(
             _.get(
               data,
               indexarray.reduce(
@@ -152,6 +158,16 @@ const fieldCopy = function fieldCopy(data, config) {
           );
           curvar = _.get(data, to);
         }
+      }
+      let curentvalue = _.get(data, to);
+      if (Array.isArray(curentvalue)) {
+        _.set(
+          data,
+          to,
+          Array.isArray(fromvalue)
+            ? [...curentvalue, ...fromvalue]
+            : [...curentvalue, fromvalue]
+        );
       }
       _.set(data, to, fromvalue);
     });
@@ -236,13 +252,11 @@ const fieldRemove = async function fieldRemove(data, config) {
  */
 const fieldRename = function fieldRename(data, config) {
   try {
-    if (path.match(/\./).length)
-      throw new Error("can't rename Root Data Field!!!");
     let fields = arrayParser(config.path).reduce(
       (cu, c) => [...cu, ...getPositions(data, c)],
       []
     );
-    if (!fields.length) throw new Error("no such path exists");
+    if (!fields.length) return "no such path exists";
     let condvaluepaths = arrayParser(config.conditionValue);
     if (config.conditionField && !config.conditionRelative) {
       conditionValues = condvaluepaths

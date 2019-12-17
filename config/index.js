@@ -1,5 +1,5 @@
 module.exports = {
-  // "--Fields Actiona---":"",
+  "--Fields Actions---": "",
   fieldAdd: {
     parent: "",
     name: "undefined",
@@ -90,7 +90,7 @@ module.exports = {
         "empty/not empty : defines if condition values are relative to conditionField or not"
     }
   },
-  // "--Data Manuplation---":"",
+  "--Data Manuplation---": "",
   groupBy: {
     from: "",
     groupBy: "",
@@ -213,7 +213,7 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
     }
   },
-  // "--Meta Functionality---":"",
+  "--Meta Functionality---": "",
   CustomFunction: {
     script: "",
     descriptions: {
@@ -222,7 +222,7 @@ module.exports = {
       script: "string : js script to be runned"
     }
   },
-  // "--Getting Data---":"",
+  "--Getting Data---": "",
   getDataHTTP: {
     to: "",
     url: "",

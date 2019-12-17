@@ -144,7 +144,6 @@ const groupBy = function groupBy(data, config) {
         (cu, ind) => cu.replace("[]", ind),
         orgto
       );
-
       if (to.includes("[]")) {
         to = to.replace(/\[\]/g, "[0]");
         let curvar = _.get(data, to);
@@ -168,13 +167,21 @@ const groupBy = function groupBy(data, config) {
         curvalue = _.get(data, to);
         if (curvalue) {
           if (Array.isArray(curvalue))
-            return (curvalue = Array.isArray(resultObject)
-              ? [...curvalue, ...resultObject]
-              : [...curvalue, resultObject]);
+            return _.set(
+              data,
+              to,
+              Array.isArray(resultObject)
+                ? [...curvalue, ...resultObject]
+                : [...curvalue, resultObject]
+            );
           else if (typeof curvalue == "object")
-            return (curvalue = Array.isArray(resultObject)
-              ? { ...curvalue, resultObject }
-              : { ...curvalue, ...resultObject });
+            return _.set(
+              data,
+              to,
+              Array.isArray(resultObject)
+                ? { ...curvalue, resultObject }
+                : { ...curvalue, ...resultObject }
+            );
         }
         _.set(data, to, resultObject);
       }
@@ -194,8 +201,8 @@ const groupBy = function groupBy(data, config) {
  */
 const flatten = function flatten(data, config) {
   try {
-    let from = arrayParser(from);
-    let to = arrayParser(to);
+    let from = arrayParser(config.from);
+    let to = arrayParser(config.to);
     let result = from
       .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
       .map(p => _.get(data, p));
