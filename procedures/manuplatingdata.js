@@ -198,6 +198,7 @@ const groupBy = function groupBy(data, config) {
  * @param {object} config procedure configuration
  * @param {string|[string]} config.from location of Array of objects
  * @param {string|[string]} config.to location of flatten array if empty it will be replaced
+ * @param {string?} config.relative empty/not empty whether to is relative to from
  */
 const flatten = function flatten(data, config) {
   try {
@@ -211,11 +212,24 @@ const flatten = function flatten(data, config) {
           []
         )
       : null;
-    if (to && config.to != config.from)
-      to.forEach(p =>
-        _.set(data, p, _.flattenDeep(from.map(p => _.get(data, p))))
-      );
-    else from.forEach(f => _.set(data, f, _.flattenDeep(_.get(data, f))));
+    if (!config.relative) {
+      if (to && config.to != config.from)
+        to.forEach(p =>
+          _.set(data, p, _.flattenDeep(from.map(p => _.get(data, p))))
+        );
+      else from.forEach(f => _.set(data, f, _.flattenDeep(_.get(data, f))));
+    } else {
+      from.forEach(f => {
+        let findexes = f.match(/\[[0-9]+\]/g) || [];
+        let fval = _.flattenDeep(_.get(data, f));
+        arrayParser(config.to).forEach(t => {
+          let to = findexes.reduce((cu, c) => cu.replace("[]", c), t);
+          if (to.includes("[]")) to = to.replace(/\[\]/g, "[0]");
+          let curval = _.get(data, to);
+          _.set(data, to, Array.isArray(curval) ? [...curval, ...fval] : fval);
+        });
+      });
+    }
     return;
   } catch (e) {
     console.error(e);

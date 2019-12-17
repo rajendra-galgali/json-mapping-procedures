@@ -140,10 +140,12 @@ module.exports = {
   flatten: {
     from: "",
     to: "",
+    relative: "",
     descriptions: {
       overall: "Flatten arrays in one level",
       from: "string | [string] : paths of Arrays to Flatten",
-      to: "string : Path of target Array"
+      to: "string : Path of target Array",
+      relative: "string : whether the to is relative to from or not"
     }
   },
   lookup: {
