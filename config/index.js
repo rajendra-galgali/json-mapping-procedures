@@ -174,6 +174,27 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to groupby feild"
     }
   },
+  toArray: {
+    from: "",
+    to: "",
+    flatten: "",
+    conditionFields: "",
+    conditionValues: "",
+    conditionRelative: "",
+    descriptions: {
+      overall: "Sums numbers or array of numbers and adds them to output",
+      from: "string | [string] : Absolute paths of values to be pushed",
+      to: "string | [string] : Absolute paths of output field",
+      flatten: "string : empty/notempty if the from array get flatten or not",
+      conditionField:
+        "string | [string] : (Optional) (Relative to from) Path of condition field",
+      conditionValue:
+        "string | [string] : (Optional) Path of condition values to match conditionField with",
+      conditionRelative:
+        "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
+    }
+  },
+  "--Math Functionalities": "",
   sum: {
     positives: "",
     negetives: "",
@@ -217,36 +238,7 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
     }
   },
-  toArray: {
-    from: "",
-    to: "",
-    flatten: "",
-    conditionFields: "",
-    conditionValues: "",
-    conditionRelative: "",
-    descriptions: {
-      overall: "Sums numbers or array of numbers and adds them to output",
-      from: "string | [string] : Absolute paths of values to be pushed",
-      to: "string | [string] : Absolute paths of output field",
-      flatten: "string : empty/notempty if the from array get flatten or not",
-      conditionField:
-        "string | [string] : (Optional) (Relative to from) Path of condition field",
-      conditionValue:
-        "string | [string] : (Optional) Path of condition values to match conditionField with",
-      conditionRelative:
-        "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
-    }
-  },
-  "--Meta Functionality---": "",
-  CustomFunction: {
-    script: "",
-    descriptions: {
-      overall:
-        "Runns Custom script in javaScript it has access to all datas and lodash functionalities",
-      script: "string : js script to be runned"
-    }
-  },
-  "--Getting Data---": "",
+  "--Outside Transactions---": "",
   getDataHTTP: {
     to: "",
     url: "",
@@ -269,6 +261,15 @@ module.exports = {
         "string : (Optional) Path to redirect option [manual, *follow, error]",
       referrer:
         "string : (Optional) Path to referrer option [no-referrer, *client]"
+    }
+  },
+  "--Meta Functionality---": "",
+  CustomFunction: {
+    script: "",
+    descriptions: {
+      overall:
+        "Runns Custom script in javaScript it has access to all datas and lodash functionalities",
+      script: "string : js script to be runned"
     }
   }
 };
