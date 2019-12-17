@@ -565,6 +565,132 @@ const sum = function sum(data, config) {
 /**
  * @param {object} data data to be manuplated
  * @param {object} config procedure configuration
+ * @param {string|[string]} config.multiplier location of multiplier inputs
+ * @param {string|[string]} config.divider location of divider inputs
+ * @param {string|[string]} config.to location of output fields
+ * @param {string|[string]} config.conditionFields location of condition fields
+ * @param {string|[string]} config.conditionValues location of condition values
+ * @param {string} config.conditionRelative empty/notempty if the conditionValues is relative to from fields
+ */
+const multiply = function multiply(data, config) {
+  try {
+    let positives = arrayParser(config.multiplier).reduce(
+      (cu, c) => [...cu, ...getPositions(data, c)],
+      []
+    );
+    let negetives = arrayParser(config.divider).reduce(
+      (cu, c) => [...cu, ...getPositions(data, c)],
+      []
+    );
+    let conditionFields = arrayParser(config.conditionFields);
+    let to = arrayParser(config.to);
+    let conditionValues;
+    let conditionValuepaths = arrayParser(config.conditionValues);
+    if (config.conditionFields && !config.conditionRelative) {
+      conditionValues = conditionValuepaths
+        .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
+        .reduce((cu, c) => {
+          let val = _.get(data, c);
+          if (Array.isArray(val)) return [...cu, ..._.flattenDeep(val)];
+          return [...cu, val];
+        }, []);
+    }
+
+    positives.forEach(p => {
+      let val = _.get(data, p);
+      if (Array.isArray(val))
+        val = _.flattenDeep(val).reduce((cu, c) => {
+          val = parseFloat(c) || 1;
+          return val ? cu * val : cu;
+        }, 1);
+      if (!val) return;
+      let pIndexes = p.match(/\[[0-9]+\]/g) || [];
+      if (config.conditionFields) {
+        if (config.conditionRelative) {
+          conditionValues = conditionValuepaths.reduce(
+            (cu, c) => [
+              ...cu,
+              ...getPositions(
+                data,
+                pIndexes.reduce((cu1, c1) => cu1.replace("[]", c1), c)
+              ).reduce((cu1, c1) => {
+                let val = _.get(data, c1);
+                if (Array.isArray(val)) return [...cu1, ..._.flattenDeep(val)];
+                return [...cu1, val];
+              }, cu)
+            ],
+            []
+          );
+        }
+        if (
+          !conditionFields.some(cf =>
+            conditionValues.includes(
+              _.get(pIndexes.reduce((cu, c) => cu.replace("[]", c1), cf))
+            )
+          )
+        )
+          return;
+      }
+      to.forEach(t => {
+        let top = pIndexes.reduce((cu, c) => cu.replace("[]", c), t);
+        let tov = parseFloat(_.get(data, top)) || 1;
+        tov *= val;
+        _.set(data, top, tov);
+      });
+    });
+
+    negetives.forEach(n => {
+      let val = parseFloat(_.get(data, n));
+      if (Array.isArray(val))
+        val = _.flattenDeep(val).reduce((cu, c) => {
+          val = parseFloat(c) || 1;
+          return val ? cu * val : cu;
+        }, 1);
+      if (!val) return;
+      let pIndexes = n.match(/\[[0-9]+\]/g) || [];
+      if (config.conditionFields) {
+        if (config.conditionRelative) {
+          conditionValues = conditionValuepaths.reduce(
+            (cu, c) => [
+              ...cu,
+              ...getPositions(
+                data,
+                pIndexes.reduce((cu1, c1) => cu1.replace("[]", c1), c)
+              ).reduce((cu1, c1) => {
+                let val = _.get(data, c1);
+                if (Array.isArray(val)) return [...cu1, ..._.flattenDeep(val)];
+                return [...cu1, val];
+              }, cu)
+            ],
+            []
+          );
+        }
+        if (
+          !conditionFields.some(cf =>
+            conditionValues.includes(
+              _.get(pIndexes.reduce((cu, c) => cu.replace("[]", c1), cf))
+            )
+          )
+        )
+          return;
+      }
+      to.forEach(t => {
+        let top = pIndexes.reduce((cu, c) => cu.replace("[]", c), t);
+        let tov = parseFloat(_.get(data, top)) || 1;
+        tov /= val;
+        _.set(data, top, Math.round(tov * 100) / 100);
+      });
+    });
+    return false;
+  } catch (e) {
+    console.error(e);
+    return e;
+  }
+};
+
+/**
+ * @param {object} data data to be manuplated
+ * @param {object} config procedure configuration
  * @param {string|[string]} config.from location of items
  * @param {string|[string]} config.to location of output arrays
  * @param {string|[string]} config.flatten whether to flatten the result array
@@ -644,6 +770,7 @@ module.exports = {
   sortBy,
   lookup,
   sum,
+  multiply,
   toArray,
   flatten
 };

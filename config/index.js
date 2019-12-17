@@ -195,6 +195,28 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
     }
   },
+  multiply: {
+    multiplier: "",
+    divider: "",
+    to: "",
+    conditionFields: "",
+    conditionValues: "",
+    conditionRelative: "",
+    descriptions: {
+      overall: "Sums numbers or array of numbers and adds them to output",
+      multiplier:
+        "string | [string] : Absolute paths of values to be multiplied",
+      divider:
+        "string | [string] : Absolute paths of values to be divided (under the line)",
+      to: "string | [string] : Absolute paths of returning value",
+      conditionField:
+        "string | [string] : (Optional) (Relative to positive and negetive) Path of condition field",
+      conditionValue:
+        "string | [string] : (Optional) Path of condition values to match conditionField with",
+      conditionRelative:
+        "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
+    }
+  },
   toArray: {
     from: "",
     to: "",
