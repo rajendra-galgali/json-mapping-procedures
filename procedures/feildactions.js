@@ -380,9 +380,13 @@ const removeItem = function removeItem(data, path) {
     if (isNaN(itemindex)) return;
     _.get(data, path.replace(/\[([0-9]+)\]$/, "")).splice(itemindex, 1);
   } else {
-    delete _.get(data, path.slice(0, path.lastIndexOf(".")))[
-      path.slice(path.lastIndexOf(".") + 1)
-    ];
+    if (path.includes(".")) {
+      delete _.get(data, path.slice(0, path.lastIndexOf(".")))[
+        path.slice(path.lastIndexOf(".") + 1)
+      ];
+    } else {
+      delete data[path];
+    }
   }
 };
 module.exports = {
