@@ -15,19 +15,18 @@ const fieldAdd = function fieldAdd(data, config) {
   try {
     let fieldlist;
     let targetdata = config.data === undefined ? {} : parser(config.data);
-    if (config.parent) {
-      fieldlist = arrayParser(config.parent).reduce(
-        (cu, c) => [...cu, ...getPositions(data, c)],
-        []
-      );
-      if (!fieldlist.length) throw new Error("Parent path is incorrect");
-    } else {
+    if (!config.parent) {
       _.set(data, config.name || "undefined", targetdata);
       return;
     }
 
-    if (!fieldlist.length)
-      _.set(parent + "." + config.name || "undefined", targetdata);
+    fieldlist = arrayParser(config.parent).reduce(
+      (cu, c) => [...cu, ...getPositions(data, c)],
+      []
+    );
+    if (!fieldlist.length) throw new Error("Parent path is incorrect");
+    // if (!fieldlist.length)
+    //   _.set(data,parent + "." + config.name || "undefined", targetdata);
     let conditionValus;
     let condvalupaths = arrayParser(config.conditionValue);
     if (config.conditionField && !config.conditionRelative) {
@@ -77,7 +76,7 @@ const fieldAdd = function fieldAdd(data, config) {
           return;
       }
       if (Array.isArray(parent)) parent.push(targetdata);
-      else _.set(data, parent + "." + config.name || "undefined", targetdata);
+      else _.set(data, p + "." + config.name || "undefined", targetdata);
       // else if (p.indexOf(".") == -1) data[p] = targetdata;
     });
   } catch (e) {
