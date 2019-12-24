@@ -765,6 +765,86 @@ const toArray = function toArray(data, config) {
     return e;
   }
 };
+
+/**
+ * @param {object} data data to be manuplated
+ * @param {object} config procedure configuration
+ * @param {string|[string]} config.from location of items
+ * @param {string|[string]} config.to location of output arrays
+ * @param {string|[string]} config.locale conversion of date
+ * @param {string|[string]} config.format whether to flatten the result array
+ * @param {string|[string]} config.conditionFields location of condition fields
+ * @param {string|[string]} config.conditionValues location of condition values
+ * @param {string} config.conditionRelative empty/notempty if the conditionValues is relative to from fields
+ */
+const dateFormat = function dateFormat(data, config) {
+  try {
+    let from = arrayParser(config.from).reduce(
+      (cu, c) => [...cu, ...getPositions(data, c)],
+      []
+    );
+    let tos = arrayParser(config.to);
+    let conditionValues;
+    let conditionValuepaths = arrayParser(config.conditionValues);
+    if (config.conditionFields && !config.conditionRelative) {
+      conditionValues = conditionValuepaths
+        .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
+        .reduce((cu, c) => {
+          let val = _.get(data, c);
+          if (Array.isArray(val)) return [...cu, ..._.flattenDeep(val)];
+          return [...cu, val];
+        }, []);
+    }
+    from.forEach((p, i) => {
+      let val = _.get(data, p);
+
+      if (config.flatten && Array.isArray(val)) val = _.flattenDeep(val);
+      if (!val) return;
+      let pIndexes = p.match(/\[[0-9]+\]/g) || [];
+      if (config.conditionFields) {
+        if (config.conditionRelative) {
+          conditionValues = conditionValuepaths.reduce(
+            (cu, c) => [
+              ...cu,
+              ...getPositions(
+                data,
+                pIndexes.reduce((cu1, c1) => cu1.replace("[]", c1), c)
+              ).reduce((cu1, c1) => {
+                let val = _.get(data, c1);
+                if (Array.isArray(val)) return [...cu1, ..._.flattenDeep(val)];
+                return [...cu1, val];
+              }, cu)
+            ],
+            []
+          );
+        }
+        if (
+          !conditionFields.some(cf =>
+            conditionValues.includes(
+              _.get(pIndexes.reduce((cu, c) => cu.replace("[]", c1), cf))
+            )
+          )
+        )
+          return;
+      }
+      let to = tos[i];
+      let top = pIndexes.reduce((cu, c) => cu.replace("[]", c), to);
+      if (top.includes("[]")) top = top.replace(/\[\]/g, "[0]");
+      _.set(
+        data,
+        top,
+        new persianDate([1396, 6, 17])
+          .toLocale(config.locale == "fa" ? "fa" : "en")
+          .format(config.format)
+      );
+    });
+    return false;
+  } catch (e) {
+    console.error(e);
+    return e;
+  }
+};
+
 module.exports = {
   groupBy,
   sortBy,
@@ -772,5 +852,6 @@ module.exports = {
   sum,
   multiply,
   toArray,
-  flatten
+  flatten,
+  dateFormat
 };

@@ -238,6 +238,29 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
     }
   },
+  "--Date Format": "",
+  dateFormat: {
+    from: "",
+    to: "",
+    locale: "",
+    format: "",
+    conditionFields: "",
+    conditionValues: "",
+    conditionRelative: "",
+    descriptions: {
+      overall: "converts dates format to specifide format and locale",
+      from: "string | [string] : Absolute paths of values to be formated",
+      to: "string | [string] : Absolute paths of output field",
+      locale: "string : fa/en formate of the date in gerigorian or galali",
+      format: "string : format of the date based on persian-date formats",
+      conditionField:
+        "string | [string] : (Optional) (Relative to from) Path of condition field",
+      conditionValue:
+        "string | [string] : (Optional) Path of condition values to match conditionField with",
+      conditionRelative:
+        "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
+    }
+  },
   "--Outside Transactions---": "",
   getDataHTTP: {
     to: "",
