@@ -1,7 +1,7 @@
 const _ = require("lodash");
 const { getPositions } = require("lodash-bzextras");
 const { parser, arrayParser } = require("../helpers");
-const persianDate = require('persian-date');
+const persianDate = require("persian-date");
 
 /**
  * @param {object} data origin and target data
@@ -42,7 +42,9 @@ const groupBy = function groupBy(data, config) {
         .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let d = _.get(data, c);
-          return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+          return Array.isArray(d)
+            ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+            : [...cu, !isNaN(Number(d)) ? Number(d) : d];
         }, []);
     }
     let positions = getPositions(data, config.from);
@@ -73,20 +75,26 @@ const groupBy = function groupBy(data, config) {
                 )
                 .reduce((cu, c) => {
                   let d = _.get(data, c);
-                  return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+                  return Array.isArray(d)
+                    ? [
+                        ...cu,
+                        ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))
+                      ]
+                    : [...cu, !isNaN(Number(d)) ? Number(d) : d];
                 }, []);
             }
-            fields = fields.filter(f =>
-              conditionValus.includes(
-                _.get(
-                  ob,
-                  (f.match(/\[[0-9]+\]/) || []).reduce(
-                    (cu, ind) => cu.replace("[]", ind),
-                    config.conditionField
-                  )
+            fields = fields.filter(f => {
+              let conval = _.get(
+                ob,
+                (f.match(/\[[0-9]+\]/) || []).reduce(
+                  (cu, ind) => cu.replace("[]", ind),
+                  config.conditionField
                 )
-              )
-            );
+              );
+              return conditionValus.includes(
+                !isNaN(Number(conval)) ? Number(conval) : conval
+              );
+            });
           }
           if (operations > 1) {
             resultObject[gbval] = resultObject[gbval] || {};
@@ -277,7 +285,9 @@ const lookup = function lookup(data, config) {
         .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let d = _.get(data, c);
-          return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+          return Array.isArray(d)
+            ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+            : [...cu, !isNaN(Number(d)) ? Number(d) : d];
         }, []);
     }
     // loop through from and to
@@ -300,18 +310,22 @@ const lookup = function lookup(data, config) {
               )
               .reduce((cu, c) => {
                 let d = _.get(data, c);
-                return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+                return Array.isArray(d)
+                  ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+                  : [...cu, !isNaN(Number(d)) ? Number(d) : d];
               }, []);
           }
+
+          let conval = _.get(
+            data,
+            indexarray.reduce(
+              (cu, c) => cu.replace("[]", c),
+              config.conditionField
+            )
+          );
           if (
             !conditionValus.includes(
-              _.get(
-                data,
-                indexarray.reduce(
-                  (cu, c) => cu.replace("[]", c),
-                  config.conditionField
-                )
-              )
+              !isNaN(Number(conval)) ? Number(conval) : conval
             )
           )
             return;
@@ -753,9 +767,18 @@ const toArray = function toArray(data, config) {
       to.forEach(t => {
         let top = pIndexes.reduce((cu, c) => cu.replace("[]", c), t);
         let tov = _.get(data, top);
-        if (!tov || !Array.isArray(tov)) {
-          tov = tov ? [tov, val] : [val];
-          return _.set(data, top, tov);
+        if (!tov) {
+          _.set(data, top, [val]);
+          return;
+        }
+        if (!Array.isArray(tov)) {
+          _.set(data, top, [tov, val]);
+          return;
+        }
+        if (Array.isArray(val)) {
+          let l = tov.length;
+          val.forEach(v => (tov[l++] = v));
+          return;
         }
         tov.push(val);
       });

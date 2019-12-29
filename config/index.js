@@ -23,6 +23,7 @@ module.exports = {
   fieldCopy: {
     from: "",
     to: "",
+    relative: "empty/not empty : relativity of copy",
     conditionFeild: "",
     conditionValuePath: "",
     conditionRelative: "",
@@ -30,6 +31,7 @@ module.exports = {
       overall: "Copy items value from one path to multiple paths",
       from: "string : The path of origin",
       to: "string : The path of destination",
+      relative: "",
       conditionFeild:
         "string : The path of feild to check the fromConditionValue with",
       conditionValue:
@@ -40,13 +42,13 @@ module.exports = {
   },
   fieldRemove: {
     path: "",
-    conditionFeild: "",
-    conditionValuePath: "",
+    conditionField: "",
+    conditionValue: "",
     conditionRelative: "",
     descriptions: {
       overall: "Removes multiple feilds based on given paths",
       path: "string | [string] > Paths of items to be removed",
-      conditionFeild:
+      conditionField:
         "string : The path of feild to check the fromConditionValue with",
       conditionValue:
         "string | [string] : The paths of values to check the fromConditionFeild value with",

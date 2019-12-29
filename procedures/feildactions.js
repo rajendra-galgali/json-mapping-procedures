@@ -1,6 +1,7 @@
 const _ = require("lodash");
 const { getPositions } = require("lodash-bzextras");
 const { parser, arrayParser } = require("../helpers");
+
 /**
  * @param {object} data origins and targets data
  * @param {object} config procedure configuration
@@ -34,7 +35,9 @@ const fieldAdd = function fieldAdd(data, config) {
         .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let d = _.get(data, c);
-          return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+          return Array.isArray(d)
+            ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+            : [...cu, !isNaN(Number(d)) ? Number(d) : d];
         }, []);
     }
 
@@ -59,18 +62,21 @@ const fieldAdd = function fieldAdd(data, config) {
             )
             .reduce((cu, c) => {
               let d = _.get(data, c);
-              return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+              return Array.isArray(d)
+                ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+                : [...cu, !isNaN(Number(d)) ? Number(d) : d];
             }, []);
         }
+        let conval = _.get(
+          data,
+          fulladdresindexarray.reduce(
+            (cu, c) => cu.replace("[]", c),
+            config.conditionField
+          )
+        );
         if (
           !conditionValus.includes(
-            _.get(
-              data,
-              fulladdresindexarray.reduce(
-                (cu, c) => cu.replace("[]", c),
-                config.conditionField
-              )
-            )
+            !isNaN(Number(conval)) ? Number(conval) : conval
           )
         )
           return;
@@ -90,7 +96,8 @@ const fieldAdd = function fieldAdd(data, config) {
  * @param {object} data origins and targets data
  * @param {object} config procedure configuration
  * @param {string|[string]} config.from location of origin data
- * @param {string} config.to location of target data
+ * @param {string|[string]} config.to location of target data
+ * @param {string} config.relative relativity of copy action
  * @param {string} config.conditionField location of condition fields
  * @param {string} config.conditionValue location of condition acceptable values
  * @param {string} config.conditionRelative if the condition values are relative or not
@@ -101,6 +108,13 @@ const fieldCopy = function fieldCopy(data, config) {
       (cu, c) => [...cu, ...getPositions(data, c)],
       []
     );
+    let to = config.to;
+    if (!config.relative) {
+      to = arrayParser(config.to).reduce(
+        (cu, c) => [...cu, ...getPositions(data, c)],
+        []
+      );
+    }
     let conditionValues;
     let condvaluepaths = arrayParser(config.conditionValue);
     if (config.conditionField && !config.conditionRelative) {
@@ -108,7 +122,9 @@ const fieldCopy = function fieldCopy(data, config) {
         .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let d = _.get(data, c);
-          return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+          return Array.isArray(d)
+            ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+            : [...cu, !isNaN(Number(d)) ? Number(d) : d];
         }, []);
     }
     from.forEach(fp => {
@@ -127,23 +143,43 @@ const fieldCopy = function fieldCopy(data, config) {
             )
             .reduce((cu, c) => {
               let d = _.get(data, c);
-              return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+              return Array.isArray(d)
+                ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+                : [...cu, !isNaN(Number(d)) ? Number(d) : d];
             }, []);
         }
+        let conval = _.get(
+          data,
+          indexarray.reduce(
+            (cu, c) => cu.replace("[]", c),
+            config.conditionField
+          )
+        );
         if (
-          !conditionValues.includes(
-            _.get(
-              data,
-              indexarray.reduce(
-                (cu, c) => cu.replace("[]", c),
-                config.conditionField
-              )
-            )
+          !conditionValus.includes(
+            !isNaN(Number(conval)) ? Number(conval) : conval
           )
         )
           return;
       }
-      let to = (fp.match(/\[[0-9]+\]/g) || []).reduce(
+      if (!config.relative) {
+        to.forEach(tp => {
+          let curentvalue = _.get(data, tp);
+          if (Array.isArray(curentvalue)) {
+            _.set(
+              data,
+              tp,
+              Array.isArray(fromvalue)
+                ? [...curentvalue, ...fromvalue]
+                : [...curentvalue, fromvalue]
+            );
+            return;
+          }
+          _.set(data, tp, fromvalue);
+        });
+        return;
+      }
+      to = (fp.match(/\[[0-9]+\]/g) || []).reduce(
         (rp, ind) => rp.replace("[]", ind),
         config.to
       );
@@ -160,13 +196,13 @@ const fieldCopy = function fieldCopy(data, config) {
       }
       let curentvalue = _.get(data, to);
       if (Array.isArray(curentvalue)) {
-        _.set(
-          data,
-          to,
-          Array.isArray(fromvalue)
-            ? [...curentvalue, ...fromvalue]
-            : [...curentvalue, fromvalue]
-        );
+        let l = curentvalue.length;
+        if (Array.isArray(fromvalue)) {
+          fromvalue.forEach(v => (curentvalue[l++] = v));
+        } else {
+          curentvalue[l] = fromvalue;
+        }
+        return;
       }
       _.set(data, to, fromvalue);
     });
@@ -193,14 +229,18 @@ const fieldRemove = async function fieldRemove(data, config) {
     );
     if (!fields.length) throw new Error("no such path exists");
     let condvaluepaths = arrayParser(config.conditionValue);
+    let conditionValues;
     if (config.conditionField && !config.conditionRelative) {
       conditionValues = condvaluepaths
         .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let d = _.get(data, c);
-          return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+          return Array.isArray(d)
+            ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+            : [...cu, !isNaN(Number(d)) ? Number(d) : d];
         }, []);
     }
+    console.log("conditionValues", conditionValues);
     fields.forEach(f => {
       if (config.conditionField) {
         let indexarray = f.match(/\[[0-9]+\]/g) || [];
@@ -215,18 +255,22 @@ const fieldRemove = async function fieldRemove(data, config) {
             )
             .reduce((cu, c) => {
               let d = _.get(data, c);
-              return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+
+              return Array.isArray(d)
+                ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+                : [...cu, !isNaN(Number(d)) ? Number(d) : d];
             }, []);
         }
+        let conval = _.get(
+          data,
+          indexarray.reduce(
+            (cu, c) => cu.replace("[]", c),
+            config.conditionField
+          )
+        );
         if (
-          !conditionValus.includes(
-            _.get(
-              data,
-              indexarray.reduce(
-                (cu, c) => cu.replace("[]", c),
-                config.conditionField
-              )
-            )
+          !conditionValues.includes(
+            !isNaN(Number(conval)) ? Number(conval) : conval
           )
         )
           return;
@@ -262,7 +306,9 @@ const fieldRename = function fieldRename(data, config) {
         .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let d = _.get(data, c);
-          return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+          return Array.isArray(d)
+            ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+            : [...cu, !isNaN(Number(d)) ? Number(d) : d];
         }, []);
     }
     fields.forEach(f => {
@@ -279,18 +325,21 @@ const fieldRename = function fieldRename(data, config) {
             )
             .reduce((cu, c) => {
               let d = _.get(data, c);
-              return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+              return Array.isArray(d)
+                ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+                : [...cu, !isNaN(Number(d)) ? Number(d) : d];
             }, []);
         }
+        let conval = _.get(
+          data,
+          indexarray.reduce(
+            (cu, c) => cu.replace("[]", c),
+            config.conditionField
+          )
+        );
         if (
           !conditionValus.includes(
-            _.get(
-              data,
-              indexarray.reduce(
-                (cu, c) => cu.replace("[]", c),
-                config.conditionField
-              )
-            )
+            !isNaN(Number(conval)) ? Number(conval) : conval
           )
         )
           return;
@@ -330,7 +379,9 @@ const fieldSetContent = function fieldSetContent(data, config) {
         .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
         .reduce((cu, c) => {
           let d = _.get(data, c);
-          return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+          return Array.isArray(d)
+            ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+            : [...cu, !isNaN(Number(d)) ? Number(d) : d];
         }, []);
     }
 
@@ -348,23 +399,27 @@ const fieldSetContent = function fieldSetContent(data, config) {
             )
             .reduce((cu, c) => {
               let d = _.get(data, c);
-              return Array.isArray(d) ? [...cu, ...d] : [...cu, d];
+              return Array.isArray(d)
+                ? [...cu, ...d.map(v => (!isNaN(Number(v)) ? Number(v) : v))]
+                : [...cu, !isNaN(Number(d)) ? Number(d) : d];
             }, []);
         }
+        let conval = _.get(
+          data,
+          indexarray.reduce(
+            (cu, c) => cu.replace("[]", c),
+            config.conditionField
+          )
+        );
         if (
           !conditionValus.includes(
-            _.get(
-              data,
-              indexarray.reduce(
-                (cu, c) => cu.replace("[]", c),
-                config.conditionField
-              )
-            )
+            !isNaN(Number(conval)) ? Number(conval) : conval
           )
         )
           return;
+        if (!conditionValus.includes()) return;
       }
-      _.set(data, f, _.cloneDeep(contentdata));
+      _.set(data, f, contentdata);
     });
   } catch (e) {
     console.error(e);
@@ -388,6 +443,7 @@ const removeItem = function removeItem(data, path) {
     }
   }
 };
+
 module.exports = {
   fieldAdd,
   fieldCopy,
