@@ -49,8 +49,10 @@ const groupBy = function groupBy(data, config) {
     }
     let positions = getPositions(data, config.from);
     if (!positions.length) throw new Error("no array in position");
+
     positions.forEach((p, ri) => {
-      let arrayobject = _.get(data, p);
+      let arrayobject = _.get(data, p) ||[];
+      if(!Array.isArray(arrayobject)) arrayobject = [];
       let resultObject = {};
       arrayobject.forEach(ob => {
         getPositions(ob, config.groupBy).forEach(gb => {
@@ -796,6 +798,7 @@ const toArray = function toArray(data, config) {
  * @param {string|[string]} config.from location of items
  * @param {string|[string]} config.to location of output arrays
  * @param {string|[string]} config.locale conversion of date
+ * @param {string|[string]} config.calenderType persian or gregorian calendar type
  * @param {string|[string]} config.format whether to flatten the result array
  * @param {string|[string]} config.conditionFields location of condition fields
  * @param {string|[string]} config.conditionValues location of condition values
@@ -803,11 +806,8 @@ const toArray = function toArray(data, config) {
  */
 const dateFormat = function dateFormat(data, config) {
   try {
-    let from = arrayParser(config.from).reduce(
-      (cu, c) => [...cu, ...getPositions(data, c)],
-      []
-    );
-    let tos = arrayParser(config.to);
+    let from = arrayParser(config.from);
+    let tos = arrayParser(config.to || config.from);
     let conditionValues;
     let conditionValuepaths = arrayParser(config.conditionValues);
     if (config.conditionFields && !config.conditionRelative) {
@@ -819,7 +819,9 @@ const dateFormat = function dateFormat(data, config) {
           return [...cu, val];
         }, []);
     }
-    from.forEach((p, i) => {
+
+    from.forEach((f, i) => {
+      getPositions(data,f).forEach(p=>{
       let val = _.get(data, p);
 
       if (config.flatten && Array.isArray(val)) val = _.flattenDeep(val);
@@ -857,10 +859,11 @@ const dateFormat = function dateFormat(data, config) {
       _.set(
         data,
         top,
-        new persianDate([1396, 6, 17])
+        new persianDate([1396, 6, 17]).toCalendar(config.calenderType == 'persian'?'persian':'gregorian')
           .toLocale(config.locale == "fa" ? "fa" : "en")
           .format(config.format)
       );
+    })
     });
     return false;
   } catch (e) {

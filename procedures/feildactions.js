@@ -81,8 +81,13 @@ const fieldAdd = function fieldAdd(data, config) {
         )
           return;
       }
-      if (Array.isArray(parent)) parent.push(targetdata);
-      else _.set(data, p + "." + config.name || "undefined", targetdata);
+      if (Array.isArray(parent)) parent.push(_.cloneDeep(targetdata));
+      else
+        _.set(
+          data,
+          p + "." + config.name || "undefined",
+          _.cloneDeep(targetdata)
+        );
       // else if (p.indexOf(".") == -1) data[p] = targetdata;
     });
   } catch (e) {
@@ -156,7 +161,7 @@ const fieldCopy = function fieldCopy(data, config) {
           )
         );
         if (
-          !conditionValus.includes(
+          !conditionValues.includes(
             !isNaN(Number(conval)) ? Number(conval) : conval
           )
         )
@@ -183,6 +188,7 @@ const fieldCopy = function fieldCopy(data, config) {
         (rp, ind) => rp.replace("[]", ind),
         config.to
       );
+
       if (to.includes("[]")) {
         to = to.replace(/\[\]/g, "[0]");
         let curvar = _.get(data, to);
@@ -198,7 +204,7 @@ const fieldCopy = function fieldCopy(data, config) {
       if (Array.isArray(curentvalue)) {
         let l = curentvalue.length;
         if (Array.isArray(fromvalue)) {
-          fromvalue.forEach(v => (curentvalue[l++] = v));
+          fromvalue.forEach(v => (curentvalue[l++] = _.cloneDeep(v)));
         } else {
           curentvalue[l] = fromvalue;
         }
@@ -240,7 +246,6 @@ const fieldRemove = async function fieldRemove(data, config) {
             : [...cu, !isNaN(Number(d)) ? Number(d) : d];
         }, []);
     }
-    console.log("conditionValues", conditionValues);
     fields.forEach(f => {
       if (config.conditionField) {
         let indexarray = f.match(/\[[0-9]+\]/g) || [];

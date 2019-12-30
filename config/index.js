@@ -23,15 +23,15 @@ module.exports = {
   fieldCopy: {
     from: "",
     to: "",
-    relative: "empty/not empty : relativity of copy",
+    relative: "",
     conditionFeild: "",
-    conditionValuePath: "",
+    conditionValue: "",
     conditionRelative: "",
     descriptions: {
       overall: "Copy items value from one path to multiple paths",
       from: "string : The path of origin",
       to: "string : The path of destination",
-      relative: "",
+      relative: "empty/not empty : relativity of copy",
       conditionFeild:
         "string : The path of feild to check the fromConditionValue with",
       conditionValue:
@@ -245,6 +245,7 @@ module.exports = {
     from: "",
     to: "",
     locale: "",
+    calenderType: "",
     format: "",
     conditionFields: "",
     conditionValues: "",
@@ -253,7 +254,9 @@ module.exports = {
       overall: "converts dates format to specifide format and locale",
       from: "string | [string] : Absolute paths of values to be formated",
       to: "string | [string] : Absolute paths of output field",
-      locale: "string : fa/en formate of the date in gerigorian or galali",
+      locale: "string : fa/en text of date in persian or english",
+      calenderType:
+        "string : persian/gregorian formate of the date in gerigorian or galali",
       format: "string : format of the date based on persian-date formats",
       conditionField:
         "string | [string] : (Optional) (Relative to from) Path of condition field",
