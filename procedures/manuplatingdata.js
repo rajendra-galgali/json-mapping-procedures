@@ -392,6 +392,8 @@ const lookup = function lookup(data, config) {
   }
 };
 
+
+
 /**
  * @param {object} data data to be manuplated
  * @param {object} config procedure configuration
@@ -872,13 +874,153 @@ const dateFormat = function dateFormat(data, config) {
   }
 };
 
+/**
+ * @param {object} data data to be manuplated
+ * @param {object} config procedure configuration
+ * @param {string} config.keys location of keys of objects
+ * @param {string} config.keyconcating location of key extension
+ * @param {string} config.values location of values of objects
+ * @param {string} config.valueconcating location of value extension
+ * @param {string} config.defaultValue path of default value if no lookup found
+ * @param {string} config.to location of output field
+ * @param {string|[string]} config.conditionFields location of condition fields
+ * @param {string} config.conditionFunction operation to check the condition field by
+ * @param {string} config.conditionFaliureValue path of value if condition failed
+
+ */
+const arrayToObject = function sum(data, config) {
+  try {
+    let keys = getPositions(data,config.keys);
+    let to = _.get(data,config.to);
+    if(!to) {to = {};_.set(data,config.to,to);}
+    let conditionFields;
+    if(config.conditionFields){
+      conditionFields = arrayParser(config.conditionFields);
+    }
+    keys.forEach(k => {
+      let key = _.get(data, k);
+      if (!key) return;
+      let value,connotmet,keyconcat,valueconcat;
+      let pIndexes = k.match(/\[[0-9]+\]/g) || [];
+      if(config.keyconcating) keyconcat = arrayParser(config.keyconcating)
+      if(config.valueconcating) valueconcat = arrayParser(config.valueconcating)
+      if (conditionFields) {
+        let conItem = conditionFields.map(cf=> _.get(data,pIndexes.reduce((cu, c) => cu.replace("[]", c), cf).replace(/\[\]/g,"[0]")));
+        if(config.conditionFunction){
+          let func;
+          try{
+            eval('func ='+ config.conditionFunction); 
+          }catch(e){
+            throw new Error('function can\'t be runned');
+          }
+          if(!func(conItem,k,key)) connotmet=true;
+        }else if (!conItem.every(c=>c)) connotmet  = true;
+      }
+      if(connotmet){
+        if(config.conditionFaliureValue){
+          value = _.get(data,pIndexes.reduce((cu, c) => cu.replace("[]", c), config.conditionFaliureValue).replace(/\[\]/g,"[0]"))
+        }else{
+          return;
+        }
+      }else{
+        value =  _.get(data,pIndexes.reduce((cu, c) => cu.replace("[]", c).replace(/\[\]/g,"[0]"), config.values));
+        if(value == undefined )
+        value = _.get(data,pIndexes.reduce((cu, c) => cu.replace("[]", c), config.defaultValue).replace(/\[\]/g,"[0]"))
+      }
+      if(keyconcat) 
+        key =  keyconcat.map(k=>_.get(data,pIndexes.reduce((cu, c) => cu.replace("[]", c), k).replace(/\[\]/g,"[0]"))).join("");
+      if(valueconcat) 
+        value =  valueconcat.map(v=>_.get(data,pIndexes.reduce((cu, c) => cu.replace("[]", c), v).replace(/\[\]/g,"[0]"))).join("");
+      
+
+      to[key] =  _.cloneDeep(value);
+    });
+
+    return false;
+  } catch (e) {
+    console.error(e);
+    return e;
+  }
+};
+
+/**
+ * @param {object} data data to be manuplated
+ * @param {object} config procedure configuration
+ * @param {string|[string]} config.refrences location of lookingup object
+ * @param {*?} config.relativeRefrence location of lookingup object
+ * @param {string} config.from location of input
+ * @param {string} config.to location of output relative to from
+ * @param {string} config.defaultValue path of default value if no lookup found
+ * @param {string|[string]} config.conditionField relative location of condition fields
+ * @param {string} config.conditionFunction relativity of location of condition value fields
+ * @param {string} config.conditionFaliureValue path of value if condition failed
+ */
+const objLookup = function lookup(data, config) {
+  try {
+    let origin = getPositions(data,config.from);
+    //get all of the lookup values in one object
+    let lookupPaths = arrayParser(config.refrences);
+    let lookupValues;
+    if (!config.relativeRefrence) {
+      lookupValues = lookupPaths
+        .reduce((cu, c) => [...cu, ...getPositions(data, c)], [])
+        .reduceRight((cu, c) => ({ ...cu, ..._.get(data, c) }), {});
+    }
+    let conditionFields;
+    if(config.conditionFields)
+      conditionFields = arrayParser(config.conditionFields);
+    origin.forEach(op=>{
+      let ov = _.get(data,op);
+      let confailiureval,lookedupval,connotmet;
+      let indexes = op.match(/\[[0-9]+\]/g) || [];
+      if(config.relativeRefrence){
+        lookupValues = lookupPaths
+        .map(lp => indexes.reduce((cu, c) => cu.replace("[]", c), lp).replace(/\[\]/g,"[0]"))
+        .reduceRight((cu, c) => ({ ...cu, ..._.get(data, c) }), {});
+      }
+      if(config.conditionFaliureValue){
+        confailiureval = _.get(data,indexes.reduce((cu, c) => cu.replace("[]", c), config.conditionFaliureValue).replace(/\[\]/g,"[0]"))
+      }
+      if (conditionFields) {
+        let conItem = conditionFields.map(cf=> _.get(data,indexes.reduce((cu, c) => cu.replace("[]", c), cf).replace(/\[\]/g,"[0]")))
+        if(config.conditionFunction){
+          let func;
+          try{
+            eval('func = '+ config.conditionFunction); 
+          }catch(e){
+            throw new Error('function can\'t be runned');
+          }
+          if(!func(conItem,lookupValues,op,ov)) connotmet = true;
+        }else if (!conItem.every(c=>c!==undefined)) connotmet = true;
+
+      }
+      if(connotmet){
+        lookedupval = confailiureval;
+      }else{
+        lookedupval = lookupValues[ov] ;
+        if(lookedupval === undefined && config.defaultValue){
+          lookedupval = _.get(data,indexes.reduce((cu, c) => cu.replace("[]", c), config.defaultValue).replace(/\[\]/g,"[0]"))
+        }
+      }
+      _.set(data,indexes.reduce((cu, c) => cu.replace("[]", c), config.to).replace(/\[\]/g,"[0]"),lookedupval);
+    })
+    
+    return false;
+  } catch (e) {
+    console.error(e);
+    return e;
+  }
+};
+
 module.exports = {
   groupBy,
   sortBy,
   lookup,
+  objLookup,
   sum,
   multiply,
   toArray,
+  arrayToObject,
   flatten,
-  dateFormat
+  dateFormat,
 };

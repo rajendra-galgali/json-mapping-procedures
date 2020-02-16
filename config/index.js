@@ -176,6 +176,7 @@ module.exports = {
         "empty/not empty : (optional) if condition values relative to groupby feild"
     }
   },
+ 
   toArray: {
     from: "",
     to: "",
@@ -194,6 +195,56 @@ module.exports = {
         "string | [string] : (Optional) Path of condition values to match conditionField with",
       conditionRelative:
         "empty/not empty : (optional) if condition values relative to (positive/negetive) fields"
+    }
+  },
+  arrayToObject: {
+    keys: "",
+    keyconcating:"",
+    values: "",
+    valueconcating:"",
+    to: "",    
+    defaultValue:"",
+    conditionFields: "",
+    conditionFunction:"",
+    conditionFaliureValue:"",
+    descriptions: {
+      overall: "creates object from given paths",
+      keys: "string : paths of keys to be created",
+      keyconcating:"string|[string] : (Optional) relative paths of values to concate to create key",
+      values: "string : paths of values (relative to key path)",
+      valueconcating:"string|[string] : (Optional) relative paths of values to concate to create value",
+      defaultValue: "string : (Optional) (Relative to from) Path of default value",
+      to: "string : location of output object",
+      conditionField:
+        "string|[string] : (Optional) paths of condition field relative to key",
+        conditionFunction:
+        "string : (Optional) operation to be done to key value  ",
+        conditionFaliureValue: "string : (Optional) (Relative to from) Path of condition failiure value"
+      }
+  },
+  objLookup: {
+    from: "",
+    to: "",
+    refrences: "",
+    relativeRefrence: "",
+    defaultValue:"",
+    conditionField: "",
+    conditionFunction: "",
+    conditionFaliureValue:"",
+    descriptions: {
+      overall:
+        "Lookups value form object by keys and returns the value",
+      from: "string  : Absolute paths of values to be looked up",
+      to: "string :  paths of destination ( relative to from)",
+      refrences: "string | [string] : paths of refrence objects",
+      relativeRefrence:
+        " empty/not empty if the refrence paths are relative to from ",
+        defaultValue: "string : (Optional) (Relative to from) Path of default value",
+      conditionField:
+        "string : (Optional) (Relative to from) Path of condition field",
+      conditionFunction:
+        "string : (Optional) function to be done on condition field input(conditionvalue,refrences,originpath,originvalue)",
+        conditionFaliureValue: "string : (Optional) (Relative to from) Path of condition failiure value"
     }
   },
   "--Math Functionalities": "",
