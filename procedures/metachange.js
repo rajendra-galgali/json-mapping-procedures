@@ -1,6 +1,6 @@
 const _ = require("lodash");
 const { getPositions } = require("lodash-bzextras");
-
+const numeral = require('numeral');
 /**
  * @param {object} data origins and targets data
  * @param {object} config procedure configuration
