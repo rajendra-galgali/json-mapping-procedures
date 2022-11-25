@@ -9,7 +9,7 @@ const moment = require("moment");
  */
 const CustomFunction = async function CustomFunction(data, config) {
   try {
-    eval(config.script);
+    await eval(config.script);
   } catch (e) {
     return e;
   }
